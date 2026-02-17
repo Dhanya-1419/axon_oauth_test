@@ -180,6 +180,15 @@ export async function POST(req) {
           instanceUrl: pick(values, "instanceUrl", "SALESFORCE_INSTANCE_URL"),
           accessToken: pick(values, "accessToken", "SALESFORCE_ACCESS_TOKEN")
         };
+        // Fallback to OAuth-stored token if not provided manually
+        if (!picked.accessToken || !picked.instanceUrl) {
+          const { getToken } = await import("../oauth/tokens/route.js");
+          const stored = getToken("salesforce");
+          if (stored) {
+            if (!picked.accessToken) picked.accessToken = stored.access_token;
+            if (!picked.instanceUrl && stored.instance_url) picked.instanceUrl = stored.instance_url;
+          }
+        }
         required(picked, ["instanceUrl", "accessToken"]);
         const base = String(picked.instanceUrl).replace(/\/+$/, "");
         const url = `${base}/services/data/v58.0/`;
@@ -229,6 +238,12 @@ export async function POST(req) {
 
       case "airtable": {
         const picked = { apiKey: pick(values, "apiKey", "AIRTABLE_API_KEY") };
+        // Fallback to OAuth-stored token if not provided manually
+        if (!picked.apiKey) {
+          const { getToken } = await import("../oauth/tokens/route.js");
+          const stored = getToken("airtable");
+          if (stored) picked.apiKey = stored.access_token;
+        }
         required(picked, ["apiKey"]);
         const url = "https://api.airtable.com/v0/meta/whoami";
         const r = await fetchJson(url, {
@@ -296,6 +311,105 @@ export async function POST(req) {
         );
       }
 
+      case "zoom": {
+        const picked = { accessToken: pick(values, "accessToken", "ZOOM_ACCESS_TOKEN") };
+        // Fallback to OAuth-stored token if not provided manually
+        if (!picked.accessToken) {
+          const { getToken } = await import("../oauth/tokens/route.js");
+          const stored = getToken("zoom");
+          if (stored) picked.accessToken = stored.access_token;
+        }
+        required(picked, ["accessToken"]);
+        const r = await fetchJson("https://api.zoom.us/v2/users/me", {
+          headers: {
+            Authorization: `Bearer ${picked.accessToken}`
+          }
+        });
+        return json({ appId, request: { url: "https://api.zoom.us/v2/users/me", method: "GET" }, response: r }, { status: r.ok ? 200 : 400 });
+      }
+
+      case "docusign": {
+        const picked = { accessToken: pick(values, "accessToken", "DOCUSIGN_ACCESS_TOKEN") };
+        // Fallback to OAuth-stored token if not provided manually
+        if (!picked.accessToken) {
+          const { getToken } = await import("../oauth/tokens/route.js");
+          const stored = getToken("docusign");
+          if (stored) picked.accessToken = stored.access_token;
+        }
+        required(picked, ["accessToken"]);
+        const r = await fetchJson("https://www.docusign.net/restapi/v2.1/login_information", {
+          headers: {
+            Authorization: `Bearer ${picked.accessToken}`
+          }
+        });
+        return json({ appId, request: { url: "https://www.docusign.net/restapi/v2.1/login_information", method: "GET" }, response: r }, { status: r.ok ? 200 : 400 });
+      }
+
+      case "quickbooks": {
+        const picked = {
+          accessToken: pick(values, "accessToken", "QUICKBOOKS_ACCESS_TOKEN"),
+          realmId: pick(values, "realmId", "QUICKBOOKS_REALM_ID")
+        };
+        // Fallback to OAuth-stored token if not provided manually
+        if (!picked.accessToken) {
+          const { getToken } = await import("../oauth/tokens/route.js");
+          const stored = getToken("quickbooks");
+          if (stored) {
+            picked.accessToken = stored.access_token;
+            if (!picked.realmId && stored.realm_id) picked.realmId = stored.realm_id;
+          }
+        }
+        required(picked, ["accessToken", "realmId"]);
+        const url = `https://quickbooks.api.intuit.com/v3/company/${picked.realmId}/companyinfo/${picked.realmId}`;
+        const r = await fetchJson(url, {
+          headers: {
+            Authorization: `Bearer ${picked.accessToken}`,
+            Accept: "application/json"
+          }
+        });
+        return json({ appId, request: { url, method: "GET" }, response: r }, { status: r.ok ? 200 : 400 });
+      }
+
+      case "paypal": {
+        const picked = { accessToken: pick(values, "accessToken", "PAYPAL_ACCESS_TOKEN") };
+        // Fallback to OAuth-stored token if not provided manually
+        if (!picked.accessToken) {
+          const { getToken } = await import("../oauth/tokens/route.js");
+          const stored = getToken("paypal");
+          if (stored) picked.accessToken = stored.access_token;
+        }
+        required(picked, ["accessToken"]);
+        // Check if sandbox or live
+        const isSandbox = process.env.PAYPAL_SANDBOX !== "false";
+        const baseUrl = isSandbox ? "https://api-m.sandbox.paypal.com" : "https://api-m.paypal.com";
+        const url = `${baseUrl}/v1/identity/oauth2/userinfo?schema=paypalv1.1`;
+        const r = await fetchJson(url, {
+          headers: {
+            Authorization: `Bearer ${picked.accessToken}`,
+            Accept: "application/json"
+          }
+        });
+        return json({ appId, request: { url, method: "GET" }, response: r }, { status: r.ok ? 200 : 400 });
+      }
+
+      case "eventbrite": {
+        const picked = { accessToken: pick(values, "accessToken", "EVENTBRITE_ACCESS_TOKEN") };
+        // Fallback to OAuth-stored token if not provided manually
+        if (!picked.accessToken) {
+          const { getToken } = await import("../oauth/tokens/route.js");
+          const stored = getToken("eventbrite");
+          if (stored) picked.accessToken = stored.access_token;
+        }
+        required(picked, ["accessToken"]);
+        const url = "https://www.eventbriteapi.com/v3/users/me/";
+        const r = await fetchJson(url, {
+          headers: {
+            Authorization: `Bearer ${picked.accessToken}`
+          }
+        });
+        return json({ appId, request: { url, method: "GET" }, response: r }, { status: r.ok ? 200 : 400 });
+      }
+
       default:
         return json(
           {
@@ -315,7 +429,11 @@ export async function POST(req) {
               "jotform",
               "ticketbud",
               "digisign",
-              "eventbrite"
+              "eventbrite",
+              "zoom",
+              "docusign",
+              "quickbooks",
+              "paypal"
             ]
           },
           { status: 400 }
