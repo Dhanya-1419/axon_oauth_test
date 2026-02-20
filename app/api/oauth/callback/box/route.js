@@ -1,23 +1,27 @@
 import { NextResponse } from "next/server";
 import { getOAuthConfig, getBaseUrl } from "../../utils";
+import { logActivity } from "../../db.js";
 import { setToken } from "../../tokens/route.js";
 
 export const runtime = "nodejs";
 
-export async function GET(request) {
-  const { searchParams } = new URL(request.url);
+export async function GET(req) {
+  const { searchParams } = new URL(req.url);
   const code = searchParams.get("code");
   const error = searchParams.get("error");
 
   if (error) {
+    await logActivity("box", "ERROR", error);
+    await logActivity("box", "SUCCESS", "Connected successfully");
     return NextResponse.redirect(
-      `${process.env.NEXTAUTH_URL || getBaseUrl(req)}?error=${encodeURIComponent(error)}`
+      `${getBaseUrl(req)}?error=${encodeURIComponent(error)}`
     );
   }
 
   if (!code) {
+    await logActivity("box", "ERROR", "Missing code from provider");
     return NextResponse.redirect(
-      `${process.env.NEXTAUTH_URL || getBaseUrl(req)}?error=missing_code`
+      `${getBaseUrl(req)}?error=missing_code`
     );
   }
 
@@ -61,13 +65,14 @@ export async function GET(request) {
 
     // Redirect back to main page with success
     return NextResponse.redirect(
-      `${process.env.NEXTAUTH_URL || getBaseUrl(req)}?oauth_success=box`
+      `${getBaseUrl(req)}?oauth_success=box`
     );
 
   } catch (error) {
+    await logActivity("box", "ERROR", error.message || "Unknown error");
     console.error("Box OAuth callback error:", error);
     return NextResponse.redirect(
-      `${process.env.NEXTAUTH_URL || getBaseUrl(req)}?error=box_oauth_failed`
+      `${getBaseUrl(req)}?error=box_oauth_failed`
     );
   }
 }

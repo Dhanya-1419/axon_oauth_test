@@ -15,7 +15,7 @@ export async function GET(req) {
   authUrl.searchParams.set("client_id", clientId);
   authUrl.searchParams.set("redirect_uri", redirectUri);
   authUrl.searchParams.set("response_type", "code");
-  if (scopes) authUrl.searchParams.set("scope", scopes);
+  authUrl.searchParams.set("scope", scopes || "crm.objects.contacts.read crm.objects.contacts.write");
   
   authUrl.searchParams.set("access_type", "offline");
   authUrl.searchParams.set("prompt", "consent");

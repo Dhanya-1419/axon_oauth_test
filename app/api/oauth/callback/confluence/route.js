@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
 import { getOAuthConfig, getBaseUrl } from "../../utils";
+import { logActivity } from "../../db.js";
 
 export const runtime = "nodejs";
 
-export async function GET(request) {
-  const searchParams = request.nextUrl.searchParams;
+export async function GET(req) {
+  const searchParams = req.nextUrl.searchParams;
   const code = searchParams.get("code");
   const error = searchParams.get("error");
   const state = searchParams.get("state");
@@ -16,14 +17,17 @@ export async function GET(request) {
   console.log('State:', state);
 
   if (error) {
+    await logActivity("confluence", "ERROR", error);
+    await logActivity("confluence", "SUCCESS", "Connected successfully");
     return NextResponse.redirect(
-      `${process.env.NEXTAUTH_URL || getBaseUrl(req)}?oauth_error=${encodeURIComponent(error)}&provider=confluence`
+      `${getBaseUrl(req)}?oauth_error=${encodeURIComponent(error)}&provider=confluence`
     );
   }
 
   if (!code) {
+    await logActivity("confluence", "ERROR", "Missing code from provider");
     return NextResponse.redirect(
-      `${process.env.NEXTAUTH_URL || getBaseUrl(req)}?oauth_error=missing_code&provider=confluence`
+      `${getBaseUrl(req)}?oauth_error=missing_code&provider=confluence`
     );
   }
 
@@ -75,13 +79,14 @@ export async function GET(request) {
     });
 
     return NextResponse.redirect(
-      `${process.env.NEXTAUTH_URL || getBaseUrl(req)}?oauth_success=true&provider=confluence`
+      `${getBaseUrl(req)}?oauth_success=true&provider=confluence`
     );
 
   } catch (error) {
+    await logActivity("confluence", "ERROR", error.message || "Unknown error");
     console.error("Confluence OAuth callback error:", error);
     return NextResponse.redirect(
-      `${process.env.NEXTAUTH_URL || getBaseUrl(req)}?oauth_error=${encodeURIComponent(error.message)}&provider=confluence`
+      `${getBaseUrl(req)}?oauth_error=${encodeURIComponent(error.message)}&provider=confluence`
     );
   }
 }

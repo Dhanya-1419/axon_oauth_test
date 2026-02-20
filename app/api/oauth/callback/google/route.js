@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getOAuthConfig, getBaseUrl } from "../../utils";
+import { logActivity } from "../../db.js";
 
 export const runtime = "nodejs";
 
@@ -11,10 +12,13 @@ export async function GET(req) {
   const baseUrl = getBaseUrl(req);
 
   if (error) {
+    await logActivity("google", "ERROR", error);
+    await logActivity("google", "SUCCESS", "Connected successfully");
     return NextResponse.redirect(`${baseUrl}?oauth_error=${encodeURIComponent(error)}`);
   }
 
   if (!code) {
+    await logActivity("google", "ERROR", "Missing code from provider");
     return NextResponse.redirect(`${baseUrl}?oauth_error=missing_code`);
   }
 
@@ -51,6 +55,7 @@ export async function GET(req) {
 
     return NextResponse.redirect(`${baseUrl}?oauth_success=google`);
   } catch (e) {
+    await logActivity("google", "ERROR", e.message || "Unknown error");
     return NextResponse.redirect(`${baseUrl}?oauth_error=${encodeURIComponent(e.message)}`);
   }
 }

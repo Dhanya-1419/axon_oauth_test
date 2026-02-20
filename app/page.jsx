@@ -75,6 +75,7 @@ const NAV_ITEMS = [
   { id: "dashboard", label: "Integrations", icon: "dashboard" },
   { id: "connected", label: "Connected",    icon: "connected" },
   { id: "tokens",    label: "Token Vault",  icon: "tokens" },
+  { id: "logs",      label: "Activity Logs",icon: "activity" },
 ];
 
 /* ─── UIIcon component ────────────────────────────────────────── */
@@ -89,7 +90,8 @@ function UIIcon({ name, size = 18 }) {
     test:      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16.3 6.1c.3.3.3.9 0 1.2L10 13.6c-.3.3-.9.3-1.2 0l-1.4-1.4c-.3-.3-.3-.9 0-1.2l6.3-6.3c.3-.3.9-.3 1.2 0z"></path><path d="M10 21v-2"></path><path d="M5 21v-2"></path><path d="M15 21v-2"></path><path d="M19 21v-2"></path><path d="M2 13h2"></path><path d="M20 13h2"></path></svg>,
     eye:       <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>,
     eyeOff:    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>,
-    edit:      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+    edit:      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>,
+    activity:  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
   };
   return icons[name] || null;
 }
@@ -157,10 +159,22 @@ export default function App() {
   const [result,        setResult]        = useState(null);
   const [notification,  setNotification]  = useState(null); // { type, msg }
   const [disconnecting, setDisconnecting] = useState(null);
+  const [logs,          setLogs]          = useState([]);
+  const [loadingLogs,   setLoadingLogs]   = useState(false);
 
   const selected = useMemo(() => ALL_PROVIDERS.find(p => p.id === selectedId), [selectedId]);
 
   /* ── Load connected tokens ───────────────────────────────────── */
+  const fetchLogs = useCallback(async () => {
+    setLoadingLogs(true);
+    try {
+      const res = await fetch("/api/oauth/logs");
+      const data = await res.json();
+      setLogs(data.logs || []);
+    } catch {}
+    setLoadingLogs(false);
+  }, []);
+
   const reloadTokens = useCallback(async () => {
     try {
       const r = await fetch("/api/oauth/tokens");
@@ -171,10 +185,12 @@ export default function App() {
       const cfgRes = await fetch("/api/oauth/configs");
       const cfgData = await cfgRes.json();
       setStoredConfigs(cfgData.configs?.map(c => c.provider) || []);
+      
+      fetchLogs();
     } catch (e) {
       console.error("Token load failed:", e);
     }
-  }, []);
+  }, [fetchLogs]);
 
   useEffect(() => { reloadTokens(); }, [reloadTokens]);
 
@@ -296,6 +312,18 @@ export default function App() {
       notify("success", "Configuration deleted from DB");
     } catch (e) {
       notify("error", "Failed to delete config: " + e.message);
+    }
+  }
+
+  /* ── Clear Logs ────────────────────────────────────────────── */
+  async function clearAllLogs() {
+    if (!confirm("Are you sure you want to clear all activity logs?")) return;
+    try {
+      await fetch("/api/oauth/logs", { method: "DELETE" });
+      setLogs([]);
+      notify("success", "Activity logs cleared");
+    } catch (e) {
+      notify("error", "Failed to clear logs");
     }
   }
 
@@ -696,6 +724,72 @@ export default function App() {
               </div>
             </div>
           )}
+
+          {/* ═══════════════════════════════════════════════════════
+               LOGS VIEW
+          ══════════════════════════════════════════════════════ */}
+          {view === "logs" && (
+            <div className="anim-fade-up">
+              <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+                <div>
+                  <div className="page-title">Activity Logs</div>
+                  <div className="page-subtitle">Historical log of OAuth connection attempts and results.</div>
+                </div>
+                <div style={{ display: 'flex', gap: 10 }}>
+                  <button className="btn-ghost" onClick={fetchLogs} disabled={loadingLogs}>
+                    {loadingLogs ? "Refreshing..." : "Refresh"}
+                  </button>
+                  <button className="btn-danger btn-sm" onClick={clearAllLogs}>Clear All</button>
+                </div>
+              </div>
+
+              <div className="panel" style={{ overflow: 'hidden' }}>
+                <div className="panel-body" style={{ padding: 0 }}>
+                  {logs.length === 0 ? (
+                    <div style={{ textAlign: "center", padding: "60px 0", color: "var(--text-3)" }}>
+                      <UIIcon name="activity" size={32} style={{ opacity: 0.2, marginBottom: 12 }} />
+                      <div style={{ fontSize: "0.85rem" }}>No activity recorded yet.</div>
+                    </div>
+                  ) : (
+                    <table className="token-table">
+                      <thead>
+                        <tr>
+                          <th>Time</th>
+                          <th>Provider</th>
+                          <th>Status</th>
+                          <th>Details</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {logs.map(log => (
+                          <tr key={log.id}>
+                            <td style={{ whiteSpace: 'nowrap', fontSize: '0.72rem', color: 'var(--text-3)' }}>
+                              {new Date(log.created_at).toLocaleString()}
+                            </td>
+                            <td>
+                              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                <BrandIcon id={log.provider} size={16} />
+                                <span style={{ textTransform: 'capitalize' }}>{log.provider}</span>
+                              </div>
+                            </td>
+                            <td>
+                              <span className={`pill ${log.status === "SUCCESS" ? "pill-green" : "pill-red"}`}>
+                                {log.status}
+                              </span>
+                            </td>
+                            <td style={{ fontSize: '0.78rem', opacity: 0.8 }}>
+                              {log.message || "-"}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
 
           {/* ═══════════════════════════════════════════════════════
                TESTER VIEW

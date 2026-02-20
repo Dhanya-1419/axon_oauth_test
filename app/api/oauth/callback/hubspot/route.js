@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getOAuthConfig, getBaseUrl } from "../../utils";
+import { logActivity } from "../../db.js";
 
 export const runtime = "nodejs";
 
@@ -9,17 +10,20 @@ export async function GET(req) {
   const error = searchParams.get("error");
 
   if (error) {
-    return NextResponse.redirect(`${process.env.NEXTAUTH_URL || getBaseUrl(req)}?oauth_error=${encodeURIComponent(error)}`);
+    await logActivity("hubspot", "ERROR", error);
+    await logActivity("hubspot", "SUCCESS", "Connected successfully");
+    return NextResponse.redirect(`${getBaseUrl(req)}?oauth_error=${encodeURIComponent(error)}`);
   }
 
   if (!code) {
-    return NextResponse.redirect(`${process.env.NEXTAUTH_URL || getBaseUrl(req)}?oauth_error=missing_code`);
+    await logActivity("hubspot", "ERROR", "Missing code from provider");
+    return NextResponse.redirect(`${getBaseUrl(req)}?oauth_error=missing_code`);
   }
 
   const { clientId, clientSecret, redirectUri } = await getOAuthConfig("hubspot", new URLSearchParams(), req);
 
   if (!clientId || !clientSecret) {
-    return NextResponse.redirect(`${process.env.NEXTAUTH_URL || getBaseUrl(req)}?oauth_error=missing_client`);
+    return NextResponse.redirect(`${getBaseUrl(req)}?oauth_error=missing_client`);
   }
 
   try {
@@ -47,8 +51,9 @@ export async function GET(req) {
       expires_at: Date.now() + (tokenData.expires_in * 1000),
     });
 
-    return NextResponse.redirect(`${process.env.NEXTAUTH_URL || getBaseUrl(req)}?oauth_success=hubspot`);
+    return NextResponse.redirect(`${getBaseUrl(req)}?oauth_success=hubspot`);
   } catch (e) {
-    return NextResponse.redirect(`${process.env.NEXTAUTH_URL || getBaseUrl(req)}?oauth_error=${encodeURIComponent(e.message)}`);
+    await logActivity("hubspot", "ERROR", e.message || "Unknown error");
+    return NextResponse.redirect(`${getBaseUrl(req)}?oauth_error=${encodeURIComponent(e.message)}`);
   }
 }

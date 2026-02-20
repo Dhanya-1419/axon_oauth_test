@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 export const runtime = "nodejs";
 
-export async function GET() {
+export async function GET(req) {
   const clientId = process.env.PAYPAL_CLIENT_ID;
   const redirectUri = `${process.env.NEXTAUTH_URL || "http://localhost:3000"}/api/oauth/callback/paypal`;
   const scopes = process.env.PAYPAL_SCOPES || "openid profile email";
@@ -21,7 +21,7 @@ export async function GET() {
   authUrl.searchParams.set("client_id", clientId);
   authUrl.searchParams.set("redirect_uri", redirectUri);
   authUrl.searchParams.set("response_type", "code");
-  authUrl.searchParams.set("scope", scopes);
+  authUrl.searchParams.set("scope", scopes || "openid profile email");
 
   return NextResponse.redirect(authUrl.toString());
 }

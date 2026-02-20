@@ -24,6 +24,15 @@ export async function initDb() {
       updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
     );
   `;
+  await sql`
+    CREATE TABLE IF NOT EXISTS oauth_logs (
+      id         SERIAL PRIMARY KEY,
+      provider   TEXT NOT NULL,
+      status     TEXT NOT NULL,
+      message    TEXT,
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    );
+  `;
   dbInited = true;
 }
 
@@ -114,4 +123,33 @@ export async function listStoredConfigs() {
 export async function deleteStoredConfig(provider) {
   await initDb();
   await sql`DELETE FROM oauth_configs WHERE provider = ${provider};`;
+}
+
+/* ─────────────────────── LOGS ─────────────────────── */
+
+export async function logActivity(provider, status, message = null) {
+  try {
+    await initDb();
+    await sql`
+      INSERT INTO oauth_logs (provider, status, message)
+      VALUES (${provider}, ${status}, ${message})
+    `;
+  } catch (e) {
+    console.error("Failed to log activity:", e);
+  }
+}
+
+export async function listLogs(limit = 50) {
+  await initDb();
+  return await sql`
+    SELECT id, provider, status, message, created_at
+    FROM oauth_logs
+    ORDER BY created_at DESC
+    LIMIT ${limit}
+  `;
+}
+
+export async function clearLogs() {
+  await initDb();
+  await sql`DELETE FROM oauth_logs`;
 }

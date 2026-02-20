@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getOAuthConfig, getBaseUrl } from "../../utils";
+import { logActivity } from "../../db.js";
 
 export const runtime = "nodejs";
 
@@ -9,10 +10,13 @@ export async function GET(req) {
   const error = searchParams.get("error");
 
   if (error) {
+    await logActivity("microsoft", "ERROR", error);
+    await logActivity("microsoft", "SUCCESS", "Connected successfully");
     return NextResponse.redirect(`https://localhost:3000?oauth_error=${encodeURIComponent(error)}`);
   }
 
   if (!code) {
+    await logActivity("microsoft", "ERROR", "Missing code from provider");
     return NextResponse.redirect(`https://localhost:3000?oauth_error=missing_code`);
   }
 
@@ -50,6 +54,7 @@ export async function GET(req) {
 
     return NextResponse.redirect(`https://localhost:3000?oauth_success=microsoft`);
   } catch (e) {
-    return NextResponse.redirect(`${process.env.NEXTAUTH_URL || getBaseUrl(req)}?oauth_error=${encodeURIComponent(e.message)}`);
+    await logActivity("microsoft", "ERROR", e.message || "Unknown error");
+    return NextResponse.redirect(`${getBaseUrl(req)}?oauth_error=${encodeURIComponent(e.message)}`);
   }
 }
