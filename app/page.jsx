@@ -24,6 +24,7 @@ const BRAND = {
   mailchimp:  { slug: "mailchimp",  bg: "rgba(255,224,27,0.10)" },
   eventbrite: { slug: "eventbrite", bg: "rgba(240,85,55,0.15)" },
   stripe:     { slug: "stripe",     bg: "rgba(99,91,255,0.15)" },
+  paypal:     { slug: "paypal",     bg: "rgba(0,112,186,0.15)" },
   quickbooks: { slug: "quickbooks", bg: "rgba(44,160,28,0.15)" },
   salesforce: { slug: "salesforce", bg: "rgba(0,161,224,0.15)" },
   airtable:   { slug: "airtable",   bg: "rgba(24,191,255,0.12)" },
@@ -59,7 +60,8 @@ const ALL_PROVIDERS = [
   { id: "eventbrite", name: "Eventbrite",     category: "Marketing",     authTypes: ["oauth", "token"], hint: "Eventbrite API v3.", fields: { token: [{ key: "token", label: "Private Token", placeholder: "..." }] } },
 
   // ── Finance ──
-  { id: "stripe",     name: "Stripe",         category: "Finance",       authTypes: ["basic"], hint: "Stripe API v1. OAuth available for Connect apps.", fields: { basic: [{ key: "secretKey", label: "Secret Key", placeholder: "sk_live_..." }] } },
+  { id: "stripe",     name: "Stripe",         category: "Finance",       authTypes: ["oauth", "basic"], hint: "Stripe API v1. OAuth for Connect apps.", fields: { basic: [{ key: "secretKey", label: "Secret Key", placeholder: "sk_live_..." }] } },
+  { id: "paypal",     name: "PayPal",         category: "Finance",       authTypes: ["oauth"], hint: "PayPal REST API via OAuth 2.0." },
   { id: "quickbooks", name: "QuickBooks",     category: "Finance",       authTypes: ["oauth"], hint: "Intuit QuickBooks Online API via OAuth 2.0." },
 
   // ── CRM & Data ──

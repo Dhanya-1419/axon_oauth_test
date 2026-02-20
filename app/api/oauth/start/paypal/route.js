@@ -1,14 +1,14 @@
 import { NextResponse } from "next/server";
+import { getOAuthConfig } from "../../utils";
 
 export const runtime = "nodejs";
 
 export async function GET(req) {
-  const clientId = process.env.PAYPAL_CLIENT_ID;
-  const redirectUri = `${process.env.NEXTAUTH_URL || "http://localhost:3000"}/api/oauth/callback/paypal`;
-  const scopes = process.env.PAYPAL_SCOPES || "openid profile email";
+  const searchParams = new URL(req.url).searchParams;
+  const { clientId, redirectUri, scopes } = await getOAuthConfig("paypal", searchParams, req);
 
   if (!clientId) {
-    return NextResponse.json({ error: "Missing PAYPAL_CLIENT_ID" }, { status: 500 });
+    return NextResponse.json({ error: "Missing PAYPAL_CLIENT_ID or manual config" }, { status: 500 });
   }
 
   // PayPal OAuth authorization endpoint (sandbox vs live)
