@@ -12,10 +12,12 @@ import crypto from "crypto";
  */
 
 export function getBaseUrl(req) {
+  if (req) {
+    const url = new URL(req.url);
+    return `${url.protocol}//${url.host}`;
+  }
   if (process.env.NEXTAUTH_URL) return process.env.NEXTAUTH_URL;
-  if (!req) return "http://localhost:3000";
-  const url = new URL(req.url);
-  return `${url.protocol}//${url.host}`;
+  return "http://localhost:3000";
 }
 export async function getOAuthConfig(provider, searchParams, baseUrlOrReq = null) {
   // 1. Check inline query params (optional one-time override)
