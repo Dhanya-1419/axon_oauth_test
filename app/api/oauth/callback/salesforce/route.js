@@ -46,7 +46,7 @@ export async function GET(req) {
     }
 
     const { setToken } = await import("../../tokens/route.js");
-    setToken("salesforce", {
+    await setToken("salesforce", {
       access_token: tokenData.access_token,
       refresh_token: tokenData.refresh_token,
       instance_url: tokenData.instance_url,

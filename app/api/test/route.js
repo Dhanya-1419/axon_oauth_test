@@ -63,7 +63,7 @@ export async function POST(req) {
         // Fallback to OAuth-stored token if not provided manually
         if (!picked.token) {
           const { getToken } = await import("../oauth/tokens/route.js");
-          const stored = getToken("github");
+          const stored = await getToken("github");
           if (stored) picked.token = stored.access_token;
         }
         required(picked, ["token"]);
@@ -81,7 +81,7 @@ export async function POST(req) {
         // Fallback to OAuth-stored token if not provided manually
         if (!picked.token) {
           const { getToken } = await import("../oauth/tokens/route.js");
-          const stored = getToken("slack");
+          const stored = await getToken("slack");
           if (stored) picked.token = stored.access_token;
         }
         required(picked, ["token"]);
@@ -113,7 +113,7 @@ export async function POST(req) {
         // Fallback to OAuth-stored token if not provided manually
         if (!picked.accessToken) {
           const { getToken } = await import("../oauth/tokens/route.js");
-          const stored = getToken("google");
+          const stored = await getToken("google");
           if (stored) picked.accessToken = stored.access_token;
         }
         required(picked, ["accessToken"]);
@@ -127,7 +127,7 @@ export async function POST(req) {
         // Fallback to OAuth-stored token if not provided manually
         if (!picked.accessToken) {
           const { getToken } = await import("../oauth/tokens/route.js");
-          const stored = getToken("microsoft");
+          const stored = await getToken("microsoft");
           if (stored) picked.accessToken = stored.access_token;
         }
         required(picked, ["accessToken"]);
@@ -183,7 +183,7 @@ export async function POST(req) {
         // Fallback to OAuth-stored token if not provided manually
         if (!picked.accessToken || !picked.instanceUrl) {
           const { getToken } = await import("../oauth/tokens/route.js");
-          const stored = getToken("salesforce");
+          const stored = await getToken("salesforce");
           if (stored) {
             if (!picked.accessToken) picked.accessToken = stored.access_token;
             if (!picked.instanceUrl && stored.instance_url) picked.instanceUrl = stored.instance_url;
@@ -241,7 +241,7 @@ export async function POST(req) {
         // Fallback to OAuth-stored token if not provided manually
         if (!picked.apiKey) {
           const { getToken } = await import("../oauth/tokens/route.js");
-          const stored = getToken("airtable");
+          const stored = await getToken("airtable");
           if (stored) picked.apiKey = stored.access_token;
         }
         required(picked, ["apiKey"]);
@@ -316,7 +316,7 @@ export async function POST(req) {
         // Fallback to OAuth-stored token if not provided manually
         if (!picked.accessToken) {
           const { getToken } = await import("../oauth/tokens/route.js");
-          const stored = getToken("zoom");
+          const stored = await getToken("zoom");
           if (stored) picked.accessToken = stored.access_token;
         }
         required(picked, ["accessToken"]);
@@ -333,7 +333,7 @@ export async function POST(req) {
         // Fallback to OAuth-stored token if not provided manually
         if (!picked.accessToken) {
           const { getToken } = await import("../oauth/tokens/route.js");
-          const stored = getToken("docusign");
+          const stored = await getToken("docusign");
           if (stored) picked.accessToken = stored.access_token;
         }
         required(picked, ["accessToken"]);
@@ -353,7 +353,7 @@ export async function POST(req) {
         // Fallback to OAuth-stored token if not provided manually
         if (!picked.accessToken) {
           const { getToken } = await import("../oauth/tokens/route.js");
-          const stored = getToken("quickbooks");
+          const stored = await getToken("quickbooks");
           if (stored) {
             picked.accessToken = stored.access_token;
             if (!picked.realmId && stored.realm_id) picked.realmId = stored.realm_id;
@@ -375,7 +375,7 @@ export async function POST(req) {
         // Fallback to OAuth-stored token if not provided manually
         if (!picked.accessToken) {
           const { getToken } = await import("../oauth/tokens/route.js");
-          const stored = getToken("paypal");
+          const stored = await getToken("paypal");
           if (stored) picked.accessToken = stored.access_token;
         }
         required(picked, ["accessToken"]);
@@ -397,7 +397,7 @@ export async function POST(req) {
         // Fallback to OAuth-stored token if not provided manually
         if (!picked.accessToken) {
           const { getToken } = await import("../oauth/tokens/route.js");
-          const stored = getToken("eventbrite");
+          const stored = await getToken("eventbrite");
           if (stored) picked.accessToken = stored.access_token;
         }
         required(picked, ["accessToken"]);

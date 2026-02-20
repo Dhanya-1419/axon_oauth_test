@@ -49,7 +49,7 @@ export async function GET(req) {
     }
 
     const { setToken } = await import("../../tokens/route.js");
-    setToken("quickbooks", {
+    await setToken("quickbooks", {
       access_token: tokenData.access_token,
       refresh_token: tokenData.refresh_token,
       expires_at: Date.now() + (tokenData.expires_in * 1000),

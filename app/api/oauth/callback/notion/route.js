@@ -51,7 +51,7 @@ export async function GET(request) {
     const tokenData = await tokenResponse.json();
     
     // Store the token
-    setToken("notion", {
+    await setToken("notion", {
       access_token: tokenData.access_token,
       workspace_id: tokenData.workspace_id,
       workspace_name: tokenData.workspace_name,

@@ -53,7 +53,7 @@ export async function GET(request) {
     const tokenData = await tokenResponse.json();
     
     // Store the token
-    setToken("figma", {
+    await setToken("figma", {
       access_token: tokenData.access_token,
       refresh_token: tokenData.refresh_token,
       expires_at: tokenData.expires_in ? Date.now() + (tokenData.expires_in * 1000) : null,

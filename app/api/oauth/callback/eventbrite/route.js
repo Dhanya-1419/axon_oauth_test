@@ -46,7 +46,7 @@ export async function GET(req) {
     }
 
     const { setToken } = await import("../../tokens/route.js");
-    setToken("eventbrite", {
+    await setToken("eventbrite", {
       access_token: tokenData.access_token,
       expires_at: Date.now() + (tokenData.expires_in ? tokenData.expires_in * 1000 : 365 * 24 * 60 * 60 * 1000), // Eventbrite tokens often don't expire
     });

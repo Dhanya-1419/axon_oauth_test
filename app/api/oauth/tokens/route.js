@@ -1,72 +1,65 @@
 import { NextResponse } from "next/server";
-import fs from "fs";
-import path from "path";
+import { upsertToken, getStoredToken, listStoredProviders, deleteStoredToken, initDb } from "../db.js";
 
 export const runtime = "nodejs";
 
-const TOKENS_FILE = path.join(process.cwd(), "tokens.json");
-
-function readTokens() {
-  try {
-    if (!fs.existsSync(TOKENS_FILE)) return {};
-    const data = fs.readFileSync(TOKENS_FILE, "utf8");
-    return JSON.parse(data);
-  } catch (e) {
-    console.error("Error reading tokens file:", e);
-    return {};
-  }
-}
-
-function writeTokens(tokens) {
-  try {
-    console.log("DEBUG WRITING TOKENS TO FILE:", TOKENS_FILE, JSON.stringify(tokens));
-    fs.writeFileSync(TOKENS_FILE, JSON.stringify(tokens, null, 2), "utf8");
-  } catch (e) {
-    console.error("Error writing tokens file:", e);
+// Initialize DB on first load (simple approach)
+let dbinited = false;
+async function ensureDb() {
+  if (!dbinited) {
+    try {
+      await initDb();
+      dbinited = true;
+    } catch (e) {
+      console.error("DB Init failed:", e);
+    }
   }
 }
 
 export async function GET() {
-  const tokens = readTokens();
-  // Filter out expired tokens
+  await ensureDb();
+  const rows = await listStoredProviders();
   const now = Date.now();
-  const validProviders = Object.keys(tokens).filter(provider => {
-    const token = tokens[provider];
-    return !token.expires_at || now < token.expires_at;
-  });
   
-  return NextResponse.json({ providers: validProviders });
+  // Filter out expired tokens
+  const valid = rows.filter(row => !row.token_data?.expires_at || now < row.token_data.expires_at);
+  
+  const validProviders = valid.map(row => row.provider);
+  const details = valid.map(row => ({
+    provider:   row.provider,
+    expires_at: row.token_data?.expires_at ?? null,
+    has_refresh: Boolean(row.token_data?.refresh_token),
+  }));
+
+  return NextResponse.json({ providers: validProviders, details });
 }
 
 export async function DELETE(req) {
+  await ensureDb();
   const { provider } = await req.json().catch(() => ({}));
   if (provider) {
-    const tokens = readTokens();
-    delete tokens[provider];
-    writeTokens(tokens);
+    await deleteStoredToken(provider);
     return NextResponse.json({ disconnected: provider });
   }
   
-  writeTokens({});
+  await deleteStoredToken();
   return NextResponse.json({ cleared: true });
 }
 
 // Helper to set/get tokens (used by callbacks)
-export function setToken(provider, tokenData) {
-  const tokens = readTokens();
-  tokens[provider] = tokenData;
-  writeTokens(tokens);
+export async function setToken(provider, tokenData) {
+  await ensureDb();
+  await upsertToken(provider, tokenData);
 }
 
-export function getToken(provider) {
-  const tokens = readTokens();
-  const token = tokens[provider];
+export async function getToken(provider) {
+  await ensureDb();
+  const token = await getStoredToken(provider);
   if (!token) return null;
   
   // Basic expiry check
   if (token.expires_at && Date.now() > token.expires_at) {
-    delete tokens[provider];
-    writeTokens(tokens);
+    await deleteStoredToken(provider);
     return null;
   }
   

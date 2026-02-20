@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getOAuthConfig } from "../../utils";
 
 export const runtime = "nodejs";
 
@@ -7,20 +8,21 @@ export async function GET(req) {
   const code = searchParams.get("code");
   const error = searchParams.get("error");
 
+  const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
+
   if (error) {
-    return NextResponse.redirect(`${process.env.NEXTAUTH_URL || "http://localhost:3000"}?oauth_error=${encodeURIComponent(error)}`);
+    return NextResponse.redirect(`${baseUrl}?oauth_error=${encodeURIComponent(error)}`);
   }
 
   if (!code) {
-    return NextResponse.redirect(`${process.env.NEXTAUTH_URL || "http://localhost:3000"}?oauth_error=missing_code`);
+    return NextResponse.redirect(`${baseUrl}?oauth_error=missing_code`);
   }
 
-  const clientId = process.env.GITHUB_ID;
-  const clientSecret = process.env.GITHUB_SECRET;
-  const redirectUri = `${process.env.NEXTAUTH_URL || "http://localhost:3000"}/api/oauth/callback/github`;
+  // Pass empty searchParams to getOAuthConfig to trigger loading from cookies
+  const { clientId, clientSecret, redirectUri } = await getOAuthConfig("github", new URLSearchParams());
 
   if (!clientId || !clientSecret) {
-    return NextResponse.redirect(`${process.env.NEXTAUTH_URL || "http://localhost:3000"}?oauth_error=missing_client`);
+    return NextResponse.redirect(`${baseUrl}?oauth_error=missing_client_credentials`);
   }
 
   try {
@@ -36,19 +38,19 @@ export async function GET(req) {
     });
 
     const tokenData = await tokenRes.json();
-    if (!tokenRes.ok) {
-      throw new Error(tokenData.error_description || tokenData.error);
+    if (!tokenRes.ok || tokenData.error) {
+      throw new Error(tokenData.error_description || tokenData.error || "Token exchange failed");
     }
 
     const { setToken } = await import("../../tokens/route.js");
-    setToken("github", {
+    await setToken("github", {
       access_token: tokenData.access_token,
       refresh_token: tokenData.refresh_token,
-      expires_at: Date.now() + (tokenData.expires_in * 1000),
+      expires_at: tokenData.expires_in ? Date.now() + (tokenData.expires_in * 1000) : null,
     });
 
-    return NextResponse.redirect(`${process.env.NEXTAUTH_URL || "http://localhost:3000"}?oauth_success=github`);
+    return NextResponse.redirect(`${baseUrl}?oauth_success=github`);
   } catch (e) {
-    return NextResponse.redirect(`${process.env.NEXTAUTH_URL || "http://localhost:3000"}?oauth_error=${encodeURIComponent(e.message)}`);
+    return NextResponse.redirect(`${baseUrl}?oauth_error=${encodeURIComponent(e.message)}`);
   }
 }

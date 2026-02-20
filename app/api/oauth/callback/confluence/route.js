@@ -66,7 +66,7 @@ export async function GET(request) {
 
     // Store the token
     const { setToken } = await import("../../tokens/route.js");
-    setToken("confluence", {
+    await setToken("confluence", {
       access_token: tokenData.access_token,
       refresh_token: tokenData.refresh_token,
       expires_in: tokenData.expires_in,
