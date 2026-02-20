@@ -238,7 +238,7 @@ export default function App() {
           setCustomConfig({
             clientId:     data.config.clientId     || "",
             clientSecret: data.config.clientSecret || "",
-            redirectUri:  data.config.redirectUri  || defaultRedirect,
+            redirectUri:  defaultRedirect,
             scopes:       data.config.scopes       || "",
           });
           setSecretSaved(Boolean(data.config.clientSecretSaved));
@@ -261,7 +261,6 @@ export default function App() {
           provider:     selected.id,
           clientId:     customConfig.clientId     || undefined,
           clientSecret: customConfig.clientSecret || undefined,
-          redirectUri:  customConfig.redirectUri  || undefined,
           scopes:       customConfig.scopes       || undefined,
         }),
       });

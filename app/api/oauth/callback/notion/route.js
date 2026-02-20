@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getOAuthConfig, getBaseUrl } from "../../utils";
 import { setToken } from "../../tokens/route.js";
 
 export const runtime = "nodejs";
@@ -10,20 +11,18 @@ export async function GET(request) {
 
   if (error) {
     return NextResponse.redirect(
-      `${process.env.NEXTAUTH_URL || "http://localhost:3000"}?error=${encodeURIComponent(error)}`
+      `${process.env.NEXTAUTH_URL || getBaseUrl(req)}?error=${encodeURIComponent(error)}`
     );
   }
 
   if (!code) {
     return NextResponse.redirect(
-      `${process.env.NEXTAUTH_URL || "http://localhost:3000"}?error=missing_code`
+      `${process.env.NEXTAUTH_URL || getBaseUrl(req)}?error=missing_code`
     );
   }
 
   try {
-    const clientId = process.env.NOTION_CLIENT_ID;
-    const clientSecret = process.env.NOTION_CLIENT_SECRET;
-    const redirectUri = `${process.env.NEXTAUTH_URL || "http://localhost:3000"}/api/oauth/callback/notion`;
+    const { clientId, clientSecret, redirectUri } = await getOAuthConfig("notion", new URLSearchParams(), req);
 
     if (!clientId || !clientSecret) {
       throw new Error("Missing NOTION_CLIENT_ID or NOTION_CLIENT_SECRET");
@@ -64,13 +63,13 @@ export async function GET(request) {
 
     // Redirect back to main page with success
     return NextResponse.redirect(
-      `${process.env.NEXTAUTH_URL || "http://localhost:3000"}?oauth_success=notion`
+      `${process.env.NEXTAUTH_URL || getBaseUrl(req)}?oauth_success=notion`
     );
 
   } catch (error) {
     console.error("Notion OAuth callback error:", error);
     return NextResponse.redirect(
-      `${process.env.NEXTAUTH_URL || "http://localhost:3000"}?error=notion_oauth_failed`
+      `${process.env.NEXTAUTH_URL || getBaseUrl(req)}?error=notion_oauth_failed`
     );
   }
 }

@@ -1,21 +1,25 @@
 import { NextResponse } from "next/server";
+import { getOAuthConfig } from "../../utils";
 
 export const runtime = "nodejs";
 
-export async function GET() {
-  const clientId = process.env.ZOOM_CLIENT_ID;
-  const redirectUri = `${process.env.NEXTAUTH_URL || "http://localhost:3000"}/api/oauth/callback/zoom`;
-  const scopes = process.env.ZOOM_SCOPES || "meeting:read user:read";
+export async function GET(req) {
+  const searchParams = new URL(req.url).searchParams;
+  const { clientId, redirectUri, scopes } = await getOAuthConfig("zoom", searchParams, req);
 
   if (!clientId) {
-    return NextResponse.json({ error: "Missing ZOOM_CLIENT_ID" }, { status: 500 });
+    return NextResponse.json({ error: "Missing ZOOM_CLIENT_ID or manual config" }, { status: 500 });
   }
 
   const authUrl = new URL("https://zoom.us/oauth/authorize");
   authUrl.searchParams.set("client_id", clientId);
   authUrl.searchParams.set("redirect_uri", redirectUri);
   authUrl.searchParams.set("response_type", "code");
-  authUrl.searchParams.set("scope", scopes);
+  if (scopes) authUrl.searchParams.set("scope", scopes);
+  
+  authUrl.searchParams.set("access_type", "offline");
+  authUrl.searchParams.set("prompt", "consent");
+  authUrl.searchParams.set("state", Math.random().toString(36).substring(7));
 
   return NextResponse.redirect(authUrl.toString());
 }

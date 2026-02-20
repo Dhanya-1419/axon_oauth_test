@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getOAuthConfig, getBaseUrl } from "../../utils";
 import { setToken } from "../../tokens/route.js";
 
 export const runtime = "nodejs";
@@ -11,20 +12,18 @@ export async function GET(request) {
 
   if (error) {
     return NextResponse.redirect(
-      `${process.env.NEXTAUTH_URL || "http://localhost:3000"}?error=${encodeURIComponent(error)}`
+      `${process.env.NEXTAUTH_URL || getBaseUrl(req)}?error=${encodeURIComponent(error)}`
     );
   }
 
   if (!code) {
     return NextResponse.redirect(
-      `${process.env.NEXTAUTH_URL || "http://localhost:3000"}?error=missing_code`
+      `${process.env.NEXTAUTH_URL || getBaseUrl(req)}?error=missing_code`
     );
   }
 
   try {
-    const clientId = process.env.FIGMA_CLIENT_ID;
-    const clientSecret = process.env.FIGMA_CLIENT_SECRET;
-    const redirectUri = `${process.env.NEXTAUTH_URL || "http://localhost:3000"}/api/oauth/callback/figma`;
+    const { clientId, clientSecret, redirectUri } = await getOAuthConfig("figma", new URLSearchParams(), req);
 
     if (!clientId || !clientSecret) {
       throw new Error("Missing FIGMA_CLIENT_ID or FIGMA_CLIENT_SECRET");
@@ -62,13 +61,13 @@ export async function GET(request) {
 
     // Redirect back to main page with success
     return NextResponse.redirect(
-      `${process.env.NEXTAUTH_URL || "http://localhost:3000"}?oauth_success=figma`
+      `${process.env.NEXTAUTH_URL || getBaseUrl(req)}?oauth_success=figma`
     );
 
   } catch (error) {
     console.error("Figma OAuth callback error:", error);
     return NextResponse.redirect(
-      `${process.env.NEXTAUTH_URL || "http://localhost:3000"}?error=figma_oauth_failed`
+      `${process.env.NEXTAUTH_URL || getBaseUrl(req)}?error=figma_oauth_failed`
     );
   }
 }

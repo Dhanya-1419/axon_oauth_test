@@ -20,7 +20,6 @@ export async function GET(req) {
         clientId:          config.clientId,
         clientSecret:      reveal ? (config.clientSecret || "") : "",
         clientSecretSaved: Boolean(config.clientSecret),
-        redirectUri:       config.redirectUri,
         scopes:            config.scopes,
       }
     });
@@ -31,7 +30,6 @@ export async function GET(req) {
     configs: rows.map(r => ({
       provider:   r.provider,
       clientId:   r.client_id,
-      redirectUri: r.redirect_uri,
       scopes:     r.scopes,
     }))
   });
@@ -42,7 +40,7 @@ export async function GET(req) {
  *  Upserts — only updates fields that are non-empty. */
 export async function POST(req) {
   const body = await req.json().catch(() => ({}));
-  const { provider, clientId, clientSecret, redirectUri, scopes } = body;
+  const { provider, clientId, clientSecret, scopes } = body;
 
   if (!provider) {
     return NextResponse.json({ error: "Missing provider" }, { status: 400 });
@@ -51,7 +49,6 @@ export async function POST(req) {
   await upsertConfig(provider, {
     clientId:     clientId     || undefined,
     clientSecret: clientSecret || undefined,
-    redirectUri:  redirectUri  || undefined,
     scopes:       scopes       || undefined,
   });
 

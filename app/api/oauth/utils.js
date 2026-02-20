@@ -9,11 +9,17 @@ import { getStoredConfig } from "./db.js";
  * but those values are NOT saved automatically here — saving
  * is done explicitly via POST /api/oauth/configs.
  */
-export async function getOAuthConfig(provider, searchParams) {
+
+export function getBaseUrl(req) {
+  if (process.env.NEXTAUTH_URL) return process.env.NEXTAUTH_URL;
+  if (!req) return "http://localhost:3000";
+  const url = new URL(req.url);
+  return `${url.protocol}//${url.host}`;
+}
+export async function getOAuthConfig(provider, searchParams, baseUrlOrReq = null) {
   // 1. Check inline query params (optional one-time override)
   let clientId     = searchParams?.get("clientId")     || null;
   let clientSecret = searchParams?.get("clientSecret") || null;
-  let redirectUri  = searchParams?.get("redirectUri")  || null;
   let scopes       = searchParams?.get("scopes")       || null;
 
   // 2. Load from DB (persisted credentials)
@@ -22,7 +28,6 @@ export async function getOAuthConfig(provider, searchParams) {
     if (stored) {
       clientId     = clientId     || stored.clientId;
       clientSecret = clientSecret || stored.clientSecret;
-      redirectUri  = redirectUri  || stored.redirectUri;
       scopes       = scopes       || stored.scopes;
     }
   }
@@ -32,10 +37,12 @@ export async function getOAuthConfig(provider, searchParams) {
   clientId     = clientId     || process.env[`${envPrefix}_ID`]            || process.env[`${envPrefix}_CLIENT_ID`];
   clientSecret = clientSecret || process.env[`${envPrefix}_SECRET`]        || process.env[`${envPrefix}_CLIENT_SECRET`];
 
-  if (!redirectUri) {
-    const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
-    redirectUri = `${baseUrl}/api/oauth/callback/${provider}`;
-  }
+  // 4. Dynamic Redirect URI (Env based with dynamic host fallback)
+  const baseUrl = (typeof baseUrlOrReq === 'string') 
+    ? baseUrlOrReq 
+    : getBaseUrl(baseUrlOrReq);
+
+  const redirectUri = `${baseUrl}/api/oauth/callback/${provider}`;
 
   return { clientId, clientSecret, redirectUri, scopes };
 }

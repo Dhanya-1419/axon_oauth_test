@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getOAuthConfig, getBaseUrl } from "../../utils";
 
 export const runtime = "nodejs";
 
@@ -15,9 +16,7 @@ export async function GET(req) {
     return NextResponse.redirect(`https://localhost:3000?oauth_error=missing_code`);
   }
 
-  const clientId = process.env.MICROSOFT_CLIENT_ID;
-  const clientSecret = process.env.MICROSOFT_CLIENT_SECRET;
-  const redirectUri = `https://localhost:3000/api/oauth/callback/microsoft`;
+  const { clientId, clientSecret, redirectUri } = await getOAuthConfig("microsoft", new URLSearchParams(), req);
 
   if (!clientId || !clientSecret) {
     return NextResponse.redirect(`https://localhost:3000?oauth_error=missing_client`);
@@ -51,6 +50,6 @@ export async function GET(req) {
 
     return NextResponse.redirect(`https://localhost:3000?oauth_success=microsoft`);
   } catch (e) {
-    return NextResponse.redirect(`${process.env.NEXTAUTH_URL || "http://localhost:3000"}?oauth_error=${encodeURIComponent(e.message)}`);
+    return NextResponse.redirect(`${process.env.NEXTAUTH_URL || getBaseUrl(req)}?oauth_error=${encodeURIComponent(e.message)}`);
   }
 }

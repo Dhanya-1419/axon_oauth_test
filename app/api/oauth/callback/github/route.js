@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getOAuthConfig } from "../../utils";
+import { getOAuthConfig, getBaseUrl } from "../../utils";
 
 export const runtime = "nodejs";
 
@@ -8,7 +8,8 @@ export async function GET(req) {
   const code = searchParams.get("code");
   const error = searchParams.get("error");
 
-  const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
+  const { getBaseUrl } = await import("../../utils");
+  const baseUrl = getBaseUrl(req);
 
   if (error) {
     return NextResponse.redirect(`${baseUrl}?oauth_error=${encodeURIComponent(error)}`);
@@ -19,7 +20,7 @@ export async function GET(req) {
   }
 
   // Pass empty searchParams to getOAuthConfig to trigger loading from cookies
-  const { clientId, clientSecret, redirectUri } = await getOAuthConfig("github", new URLSearchParams());
+  const { clientId, clientSecret, redirectUri } = await getOAuthConfig("github", new URLSearchParams(), req);
 
   if (!clientId || !clientSecret) {
     return NextResponse.redirect(`${baseUrl}?oauth_error=missing_client_credentials`);

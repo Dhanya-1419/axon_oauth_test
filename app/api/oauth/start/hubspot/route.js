@@ -1,22 +1,25 @@
 import { NextResponse } from "next/server";
+import { getOAuthConfig } from "../../utils";
 
 export const runtime = "nodejs";
 
-export async function GET() {
-  const clientId = process.env.HUBSPOT_CLIENT_ID;
-  const redirectUri = `${process.env.NEXTAUTH_URL || "http://localhost:3000"}/api/oauth/callback/hubspot`;
-  const scopes = process.env.HUBSPOT_SCOPES || "crm.objects.contacts.read crm.objects.companies.read crm.objects.deals.read crm.objects.tickets.read";
+export async function GET(req) {
+  const searchParams = new URL(req.url).searchParams;
+  const { clientId, redirectUri, scopes } = await getOAuthConfig("hubspot", searchParams, req);
 
   if (!clientId) {
-    return NextResponse.json({ error: "Missing HUBSPOT_CLIENT_ID" }, { status: 500 });
+    return NextResponse.json({ error: "Missing HUBSPOT_CLIENT_ID or manual config" }, { status: 500 });
   }
 
   const authUrl = new URL("https://app.hubspot.com/oauth/authorize");
   authUrl.searchParams.set("client_id", clientId);
   authUrl.searchParams.set("redirect_uri", redirectUri);
-  authUrl.searchParams.set("scope", scopes);
   authUrl.searchParams.set("response_type", "code");
-  authUrl.searchParams.set("user_type", "hapikey");
+  if (scopes) authUrl.searchParams.set("scope", scopes);
+  
+  authUrl.searchParams.set("access_type", "offline");
+  authUrl.searchParams.set("prompt", "consent");
+  authUrl.searchParams.set("state", Math.random().toString(36).substring(7));
 
   return NextResponse.redirect(authUrl.toString());
 }

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getOAuthConfig, getBaseUrl } from "../../utils";
 
 export const runtime = "nodejs";
 
@@ -8,7 +9,7 @@ export async function GET(req) {
   const error = searchParams.get("error");
   const realmId = searchParams.get("realmId"); // QuickBooks returns the company realmId
 
-  const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
+  const baseUrl = getBaseUrl(req);
 
   if (error) {
     return NextResponse.redirect(`${baseUrl}?oauth_error=${encodeURIComponent(error)}`);
@@ -18,9 +19,7 @@ export async function GET(req) {
     return NextResponse.redirect(`${baseUrl}?oauth_error=missing_code`);
   }
 
-  const clientId = process.env.QUICKBOOKS_CLIENT_ID;
-  const clientSecret = process.env.QUICKBOOKS_CLIENT_SECRET;
-  const redirectUri = `${baseUrl}/api/oauth/callback/quickbooks`;
+  const { clientId, clientSecret, redirectUri } = await getOAuthConfig("quickbooks", new URLSearchParams(), req);
 
   if (!clientId || !clientSecret) {
     return NextResponse.redirect(`${baseUrl}?oauth_error=missing_client`);

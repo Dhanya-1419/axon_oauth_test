@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getOAuthConfig, getBaseUrl } from "../../utils";
 
 export const runtime = "nodejs";
 
@@ -16,20 +17,18 @@ export async function GET(request) {
 
   if (error) {
     return NextResponse.redirect(
-      `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}?oauth_error=${encodeURIComponent(error)}&provider=confluence`
+      `${process.env.NEXTAUTH_URL || getBaseUrl(req)}?oauth_error=${encodeURIComponent(error)}&provider=confluence`
     );
   }
 
   if (!code) {
     return NextResponse.redirect(
-      `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}?oauth_error=missing_code&provider=confluence`
+      `${process.env.NEXTAUTH_URL || getBaseUrl(req)}?oauth_error=missing_code&provider=confluence`
     );
   }
 
   try {
-    const clientId = process.env.CONFLUENCE_CLIENT_ID;
-    const clientSecret = process.env.CONFLUENCE_CLIENT_SECRET;
-    const redirectUri = `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/oauth/callback/confluence`;
+    const { clientId, clientSecret, redirectUri } = await getOAuthConfig("confluence", new URLSearchParams(), req);
 
     // Debug logging
     console.log('🔍 Confluence Token Exchange Debug:');
@@ -76,13 +75,13 @@ export async function GET(request) {
     });
 
     return NextResponse.redirect(
-      `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}?oauth_success=true&provider=confluence`
+      `${process.env.NEXTAUTH_URL || getBaseUrl(req)}?oauth_success=true&provider=confluence`
     );
 
   } catch (error) {
     console.error("Confluence OAuth callback error:", error);
     return NextResponse.redirect(
-      `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}?oauth_error=${encodeURIComponent(error.message)}&provider=confluence`
+      `${process.env.NEXTAUTH_URL || getBaseUrl(req)}?oauth_error=${encodeURIComponent(error.message)}&provider=confluence`
     );
   }
 }
