@@ -15,7 +15,7 @@ export async function GET(req) {
   authUrl.searchParams.set("client_id", clientId);
   authUrl.searchParams.set("redirect_uri", redirectUri);
   authUrl.searchParams.set("response_type", "code");
-  authUrl.searchParams.set("scope", scopes || "file_read");
+  authUrl.searchParams.set("scope", scopes || "file_content:read");
   
   authUrl.searchParams.set("access_type", "offline");
   authUrl.searchParams.set("prompt", "consent");

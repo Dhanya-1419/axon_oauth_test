@@ -20,7 +20,7 @@ export async function GET(req) {
   authUrl.searchParams.set("owner", "user");
   
   if (scopes) {
-    authUrl.searchParams.set("scope", scopes);
+    authUrl.searchParams.set("scope", scopes || "");
   }
 
   return NextResponse.redirect(authUrl.toString());

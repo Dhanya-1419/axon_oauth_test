@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect, useCallback } from "react";
+import Link from "next/link";
 
 /* ─── Brand colors (subtle bg tint per provider) ───────────────── */
 const BRAND = {
@@ -75,7 +76,7 @@ const NAV_ITEMS = [
   { id: "dashboard", label: "Integrations", icon: "dashboard" },
   { id: "connected", label: "Connected",    icon: "connected" },
   { id: "tokens",    label: "Token Vault",  icon: "tokens" },
-  { id: "logs",      label: "Activity Logs",icon: "activity" },
+  { id: "logs",      label: "Activity Logs",icon: "activity", path: "/logs" },
 ];
 
 /* ─── UIIcon component ────────────────────────────────────────── */
@@ -410,21 +411,38 @@ export default function App() {
         </div>
 
         <div className="sidebar-section-label">Workspace</div>
-        {navWithBadges.map(n => (
-          <div
-            key={n.id}
-            className={`nav-item ${view === n.id || (view === "tester" && n.id === "dashboard") ? "active" : ""}`}
-            onClick={() => { setView(n.id); if (n.id !== "tester") setSelectedId(null); }}
-          >
-            <span className="nav-icon">
-              <UIIcon name={n.icon} size={18} />
-            </span>
-            <span>{n.label}</span>
-            {n.badge ? (
-              <span className={`nav-badge ${n.badge === 0 ? "pending" : ""}`}>{n.badge}</span>
-            ) : null}
-          </div>
-        ))}
+        {navWithBadges.map(n => {
+          const isActive = view === n.id || (view === "tester" && n.id === "dashboard");
+          const content = (
+            <>
+              <span className="nav-icon">
+                <UIIcon name={n.icon} size={18} />
+              </span>
+              <span>{n.label}</span>
+              {n.badge ? (
+                <span className={`nav-badge ${n.badge === 0 ? "pending" : ""}`}>{n.badge}</span>
+              ) : null}
+            </>
+          );
+
+          if (n.path) {
+            return (
+              <Link key={n.id} href={n.path} className="nav-item">
+                {content}
+              </Link>
+            );
+          }
+
+          return (
+            <div
+              key={n.id}
+              className={`nav-item ${isActive ? "active" : ""}`}
+              onClick={() => { setView(n.id); if (n.id !== "tester") setSelectedId(null); }}
+            >
+              {content}
+            </div>
+          );
+        })}
 
         <div className="sidebar-sep" />
         <div className="sidebar-section-label">Providers</div>
