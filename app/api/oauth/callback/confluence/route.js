@@ -18,7 +18,6 @@ export async function GET(req) {
 
   if (error) {
     await logActivity("confluence", "ERROR", error);
-    await logActivity("confluence", "SUCCESS", "Connected successfully");
     return NextResponse.redirect(
       `${getBaseUrl(req)}?oauth_error=${encodeURIComponent(error)}&provider=confluence`
     );

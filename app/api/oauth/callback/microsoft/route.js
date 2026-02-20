@@ -11,7 +11,6 @@ export async function GET(req) {
 
   if (error) {
     await logActivity("microsoft", "ERROR", error);
-    await logActivity("microsoft", "SUCCESS", "Connected successfully");
     return NextResponse.redirect(`https://localhost:3000?oauth_error=${encodeURIComponent(error)}`);
   }
 
@@ -52,6 +51,7 @@ export async function GET(req) {
       expires_at: Date.now() + (tokenData.expires_in * 1000),
     });
 
+    await logActivity("microsoft", "SUCCESS", "Connected successfully");
     return NextResponse.redirect(`https://localhost:3000?oauth_success=microsoft`);
   } catch (e) {
     await logActivity("microsoft", "ERROR", e.message || "Unknown error");

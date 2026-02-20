@@ -11,7 +11,6 @@ export async function GET(req) {
 
   if (error) {
     await logActivity("hubspot", "ERROR", error);
-    await logActivity("hubspot", "SUCCESS", "Connected successfully");
     return NextResponse.redirect(`${getBaseUrl(req)}?oauth_error=${encodeURIComponent(error)}`);
   }
 
@@ -51,6 +50,7 @@ export async function GET(req) {
       expires_at: Date.now() + (tokenData.expires_in * 1000),
     });
 
+    await logActivity("hubspot", "SUCCESS", "Connected successfully");
     return NextResponse.redirect(`${getBaseUrl(req)}?oauth_success=hubspot`);
   } catch (e) {
     await logActivity("hubspot", "ERROR", e.message || "Unknown error");

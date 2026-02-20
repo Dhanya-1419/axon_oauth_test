@@ -14,7 +14,6 @@ export async function GET(req) {
 
   if (error) {
     await logActivity("github", "ERROR", error);
-    await logActivity("github", "SUCCESS", "Connected successfully");
     return NextResponse.redirect(`${baseUrl}?oauth_error=${encodeURIComponent(error)}`);
   }
 
@@ -54,6 +53,7 @@ export async function GET(req) {
       expires_at: tokenData.expires_in ? Date.now() + (tokenData.expires_in * 1000) : null,
     });
 
+    await logActivity("github", "SUCCESS", "Connected successfully");
     return NextResponse.redirect(`${baseUrl}?oauth_success=github`);
   } catch (e) {
     await logActivity("github", "ERROR", e.message || "Unknown error");

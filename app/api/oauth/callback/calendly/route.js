@@ -9,10 +9,10 @@ export async function GET(req) {
   const { searchParams } = new URL(req.url);
   const code = searchParams.get("code");
   const error = searchParams.get("error");
+  const codeVerifier = req.cookies.get("calendly_code_verifier")?.value;
 
   if (error) {
     await logActivity("calendly", "ERROR", error);
-    await logActivity("calendly", "SUCCESS", "Connected successfully");
     return NextResponse.redirect(
       `${getBaseUrl(req)}?error=${encodeURIComponent(error)}`
     );
@@ -44,6 +44,7 @@ export async function GET(req) {
         client_secret: clientSecret,
         code: code,
         redirect_uri: redirectUri,
+        code_verifier: codeVerifier || "",
       }),
     });
 
@@ -63,9 +64,13 @@ export async function GET(req) {
     });
 
     // Redirect back to main page with success
-    return NextResponse.redirect(
+    const res = NextResponse.redirect(
       `${getBaseUrl(req)}?oauth_success=calendly`
     );
+    
+    // Clear the verifier cookie
+    res.cookies.delete("calendly_code_verifier");
+    return res;
 
   } catch (error) {
     await logActivity("calendly", "ERROR", error.message || "Unknown error");

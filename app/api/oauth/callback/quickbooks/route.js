@@ -14,7 +14,6 @@ export async function GET(req) {
 
   if (error) {
     await logActivity("quickbooks", "ERROR", error);
-    await logActivity("quickbooks", "SUCCESS", "Connected successfully");
     return NextResponse.redirect(`${baseUrl}?oauth_error=${encodeURIComponent(error)}`);
   }
 
@@ -59,6 +58,7 @@ export async function GET(req) {
       realm_id: realmId, // Store the realmId for API calls
     });
 
+    await logActivity("quickbooks", "SUCCESS", "Connected successfully");
     return NextResponse.redirect(`${baseUrl}?oauth_success=quickbooks`);
   } catch (e) {
     await logActivity("quickbooks", "ERROR", e.message || "Unknown error");

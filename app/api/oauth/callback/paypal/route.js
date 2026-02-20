@@ -13,7 +13,6 @@ export async function GET(req) {
 
   if (error) {
     await logActivity("paypal", "ERROR", error);
-    await logActivity("paypal", "SUCCESS", "Connected successfully");
     return NextResponse.redirect(`${baseUrl}?oauth_error=${encodeURIComponent(error)}`);
   }
 
@@ -64,6 +63,7 @@ export async function GET(req) {
       is_sandbox: isSandbox,
     });
 
+    await logActivity("paypal", "SUCCESS", "Connected successfully");
     return NextResponse.redirect(`${baseUrl}?oauth_success=paypal`);
   } catch (e) {
     await logActivity("paypal", "ERROR", e.message || "Unknown error");

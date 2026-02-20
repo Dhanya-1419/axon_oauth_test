@@ -13,7 +13,6 @@ export async function GET(req) {
 
   if (error) {
     await logActivity("google", "ERROR", error);
-    await logActivity("google", "SUCCESS", "Connected successfully");
     return NextResponse.redirect(`${baseUrl}?oauth_error=${encodeURIComponent(error)}`);
   }
 
@@ -53,6 +52,7 @@ export async function GET(req) {
       expires_at: tokenData.expires_in ? Date.now() + (tokenData.expires_in * 1000) : null,
     });
 
+    await logActivity("google", "SUCCESS", "Connected successfully");
     return NextResponse.redirect(`${baseUrl}?oauth_success=google`);
   } catch (e) {
     await logActivity("google", "ERROR", e.message || "Unknown error");

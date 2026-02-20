@@ -13,7 +13,6 @@ export async function GET(req) {
 
   if (error) {
     await logActivity("eventbrite", "ERROR", error);
-    await logActivity("eventbrite", "SUCCESS", "Connected successfully");
     return NextResponse.redirect(`${baseUrl}?oauth_error=${encodeURIComponent(error)}`);
   }
 
@@ -54,6 +53,7 @@ export async function GET(req) {
       expires_at: Date.now() + (tokenData.expires_in ? tokenData.expires_in * 1000 : 365 * 24 * 60 * 60 * 1000), // Eventbrite tokens often don't expire
     });
 
+    await logActivity("eventbrite", "SUCCESS", "Connected successfully");
     return NextResponse.redirect(`${baseUrl}?oauth_success=eventbrite`);
   } catch (e) {
     await logActivity("eventbrite", "ERROR", e.message || "Unknown error");

@@ -13,7 +13,6 @@ export async function GET(req) {
 
   if (error) {
     await logActivity("figma", "ERROR", error);
-    await logActivity("figma", "SUCCESS", "Connected successfully");
     return NextResponse.redirect(
       `${getBaseUrl(req)}?error=${encodeURIComponent(error)}`
     );

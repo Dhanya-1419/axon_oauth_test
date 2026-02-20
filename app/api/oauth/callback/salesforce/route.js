@@ -13,7 +13,6 @@ export async function GET(req) {
 
   if (error) {
     await logActivity("salesforce", "ERROR", error);
-    await logActivity("salesforce", "SUCCESS", "Connected successfully");
     return NextResponse.redirect(`${baseUrl}?oauth_error=${encodeURIComponent(error)}`);
   }
 
@@ -56,6 +55,7 @@ export async function GET(req) {
       expires_at: Date.now() + (tokenData.expires_in ? tokenData.expires_in * 1000 : 3600 * 1000),
     });
 
+    await logActivity("salesforce", "SUCCESS", "Connected successfully");
     return NextResponse.redirect(`${baseUrl}?oauth_success=salesforce`);
   } catch (e) {
     await logActivity("salesforce", "ERROR", e.message || "Unknown error");

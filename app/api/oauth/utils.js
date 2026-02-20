@@ -1,4 +1,5 @@
 import { getStoredConfig } from "./db.js";
+import crypto from "crypto";
 
 /**
  * Returns OAuth credentials for a provider.
@@ -45,4 +46,13 @@ export async function getOAuthConfig(provider, searchParams, baseUrlOrReq = null
   const redirectUri = `${baseUrl}/api/oauth/callback/${provider}`;
 
   return { clientId, clientSecret, redirectUri, scopes };
+}
+
+/**
+ * Generates PKCE (Proof Key for Code Exchange) code_verifier and code_challenge.
+ */
+export function generatePKCE() {
+  const verifier = crypto.randomBytes(32).toString('base64url');
+  const challenge = crypto.createHash('sha256').update(verifier).digest('base64url');
+  return { verifier, challenge };
 }

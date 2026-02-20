@@ -12,7 +12,6 @@ export async function GET(req) {
 
   if (error) {
     await logActivity("clickup", "ERROR", error);
-    await logActivity("clickup", "SUCCESS", "Connected successfully");
     return NextResponse.redirect(
       `${getBaseUrl(req)}?error=${encodeURIComponent(error)}`
     );
