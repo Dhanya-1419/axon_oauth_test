@@ -88,7 +88,8 @@ function UIIcon({ name, size = 18 }) {
     save:      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>,
     test:      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16.3 6.1c.3.3.3.9 0 1.2L10 13.6c-.3.3-.9.3-1.2 0l-1.4-1.4c-.3-.3-.3-.9 0-1.2l6.3-6.3c.3-.3.9-.3 1.2 0z"></path><path d="M10 21v-2"></path><path d="M5 21v-2"></path><path d="M15 21v-2"></path><path d="M19 21v-2"></path><path d="M2 13h2"></path><path d="M20 13h2"></path></svg>,
     eye:       <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>,
-    eyeOff:    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+    eyeOff:    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>,
+    edit:      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
   };
   return icons[name] || null;
 }
@@ -146,7 +147,8 @@ export default function App() {
   const [customConfig,  setCustomConfig]  = useState({ clientId: "", clientSecret: "", redirectUri: "", scopes: "" });
   const [secretSaved,   setSecretSaved]   = useState(false);
   const [cfgSaving,     setCfgSaving]     = useState(false);
-  const [cfgSavedOk,    setCfgSavedOk]   = useState(false);
+  const [cfgSavedOk,    setCfgSavedOk]    = useState(false);
+  const [storedConfigs, setStoredConfigs] = useState([]); // List of providers with stored client creds
   const [showSecret,    setShowSecret]    = useState(false);
   const [testValues,    setTestValues]    = useState({});
   const [rawBody,       setRawBody]       = useState("{}");
@@ -164,8 +166,11 @@ export default function App() {
       const r = await fetch("/api/oauth/tokens");
       const d = await r.json();
       setOauthTokens(d.providers || []);
-      // Also grab token details for vault view
       setTokenDetails(d.details || d.providers?.map(p => ({ provider: p })) || []);
+
+      const cfgRes = await fetch("/api/oauth/configs");
+      const cfgData = await cfgRes.json();
+      setStoredConfigs(cfgData.configs?.map(c => c.provider) || []);
     } catch (e) {
       console.error("Token load failed:", e);
     }
@@ -267,12 +272,31 @@ export default function App() {
       setCfgSavedOk(true);
       if (customConfig.clientSecret) setSecretSaved(true);
       setCustomConfig(prev => ({ ...prev, clientSecret: "" }));
+      await reloadTokens();
       setTimeout(() => setCfgSavedOk(false), 3000);
       notify("success", "Config saved to Neon DB ✓");
     } catch (e) {
       notify("error", "Failed to save config: " + e.message);
     } finally {
       setCfgSaving(false);
+    }
+  }
+
+  /* ── Delete config from DB ───────────────────────────────────── */
+  async function deleteConfig() {
+    if (!confirm(`Are you sure you want to delete stored credentials for ${selected.name}? This will NOT disconnect active tokens.`)) return;
+    try {
+      await fetch("/api/oauth/configs", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ provider: selected.id }),
+      });
+      setCustomConfig(prev => ({ ...prev, clientId: "", clientSecret: "", scopes: "" }));
+      setSecretSaved(false);
+      await reloadTokens();
+      notify("success", "Configuration deleted from DB");
+    } catch (e) {
+      notify("error", "Failed to delete config: " + e.message);
     }
   }
 
@@ -515,26 +539,30 @@ export default function App() {
               {/* Provider grid */}
               <div className="provider-grid stagger">
                 {filtered.map(p => {
-                  const connected = oauthTokens.includes(p.id);
+                  const isConnected = oauthTokens.includes(p.id);
+                  const isConfigured = storedConfigs.includes(p.id);
                   return (
                     <div
                       key={p.id}
-                      className={`provider-card anim-fade-up ${connected ? "connected" : ""}`}
+                      className={`provider-card anim-fade-up ${isConnected ? "connected" : ""}`}
                       onClick={() => openTester(p.id)}
                     >
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                         <div className="provider-logo">
                           <BrandIcon id={p.id} size={24} />
                         </div>
-                        {connected && <span className="pill pill-green">✓</span>}
+                        <div style={{ display: "flex", gap: 5 }}>
+                          {isConfigured && !isConnected && <span className="pill pill-indigo" style={{ fontSize: '0.65rem' }}>Configured</span>}
+                          {isConnected && <span className="pill pill-green">✓</span>}
+                        </div>
                       </div>
                       <div>
                         <div className="provider-name">{p.name}</div>
                         <div className="provider-category">{p.category}</div>
                       </div>
-                      <div className={`provider-status ${connected ? "ok" : "pending"}`}>
+                      <div className={`provider-status ${isConnected ? "ok" : "pending"}`}>
                         <span className="dot" />
-                        {connected ? "Connected" : p.authTypes.includes("oauth") ? "OAuth Ready" : "API Key"}
+                        {isConnected ? "Connected" : p.authTypes.includes("oauth") ? "OAuth Ready" : "API Key"}
                       </div>
                     </div>
                   );
@@ -587,14 +615,19 @@ export default function App() {
                         <div style={{ fontSize: "0.76rem", color: "var(--text-2)", marginTop: 2 }}>{p.category}</div>
                       </div>
                       <span className="pill pill-green">● Connected</span>
-                      <button className="btn-ghost btn-sm" onClick={() => openTester(p.id)}>Test →</button>
-                      <button
-                        className="btn-danger btn-sm"
-                        disabled={disconnecting === p.id}
-                        onClick={() => disconnect(p.id)}
-                      >
-                        {disconnecting === p.id ? "…" : "Disconnect"}
-                      </button>
+                      <div style={{ display: "flex", gap: 8 }}>
+                        <button className="btn-ghost btn-sm" onClick={() => openTester(p.id)} title="Test Connection">Test →</button>
+                        <button className="btn-ghost btn-sm" onClick={() => openTester(p.id)} title="Edit Configuration">
+                          <UIIcon name="edit" size={14} />
+                        </button>
+                        <button
+                          className="btn-danger btn-sm"
+                          disabled={disconnecting === p.id}
+                          onClick={() => disconnect(p.id)}
+                        >
+                          {disconnecting === p.id ? "…" : "Disconnect"}
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -647,6 +680,9 @@ export default function App() {
                             <td>
                               <div style={{ display: "flex", gap: 6 }}>
                                 <button className="btn-ghost btn-sm" onClick={() => openTester(p.id)}>Test</button>
+                                <button className="btn-ghost btn-sm" onClick={() => openTester(p.id)} title="Edit Config">
+                                  <UIIcon name="edit" size={14} />
+                                </button>
                                 <button className="btn-danger btn-sm" disabled={disconnecting === p.id} onClick={() => disconnect(p.id)}>
                                   {disconnecting === p.id ? "…" : "Revoke"}
                                 </button>
@@ -793,6 +829,16 @@ export default function App() {
                           {cfgSaving ? "Saving…" : cfgSavedOk ? "Saved to Neon DB" : "Save Config to Database"}
                         </span>
                       </button>
+
+                      {storedConfigs.includes(selected.id) && (
+                        <button
+                          className="btn-ghost btn-sm btn-full"
+                          style={{ marginTop: 8, color: "var(--red)", opacity: 0.7 }}
+                          onClick={deleteConfig}
+                        >
+                          Delete Stored Credentials
+                        </button>
+                      )}
 
                       <div className="sep" />
 
