@@ -8,21 +8,22 @@ export async function GET(req) {
   const searchParams = new URL(req.url).searchParams;
   const code = searchParams.get("code");
   const error = searchParams.get("error");
+  const baseUrl = getBaseUrl(req);
 
   if (error) {
     await logActivity("microsoft", "ERROR", error);
-    return NextResponse.redirect(`https://localhost:3000?oauth_error=${encodeURIComponent(error)}`);
+    return NextResponse.redirect(`${baseUrl}?oauth_error=${encodeURIComponent(error)}`);
   }
 
   if (!code) {
     await logActivity("microsoft", "ERROR", "Missing code from provider");
-    return NextResponse.redirect(`https://localhost:3000?oauth_error=missing_code`);
+    return NextResponse.redirect(`${baseUrl}?oauth_error=missing_code`);
   }
 
   const { clientId, clientSecret, redirectUri } = await getOAuthConfig("microsoft", new URLSearchParams(), req);
 
   if (!clientId || !clientSecret) {
-    return NextResponse.redirect(`https://localhost:3000?oauth_error=missing_client`);
+    return NextResponse.redirect(`${baseUrl}?oauth_error=missing_client`);
   }
 
   try {
@@ -52,9 +53,9 @@ export async function GET(req) {
     });
 
     await logActivity("microsoft", "SUCCESS", "Connected successfully");
-    return NextResponse.redirect(`https://localhost:3000?oauth_success=microsoft`);
+    return NextResponse.redirect(`${baseUrl}?oauth_success=microsoft`);
   } catch (e) {
     await logActivity("microsoft", "ERROR", e.message || "Unknown error");
-    return NextResponse.redirect(`${getBaseUrl(req)}?oauth_error=${encodeURIComponent(e.message)}`);
+    return NextResponse.redirect(`${baseUrl}?oauth_error=${encodeURIComponent(e.message)}`);
   }
 }
