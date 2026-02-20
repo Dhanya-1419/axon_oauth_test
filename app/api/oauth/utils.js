@@ -28,7 +28,6 @@ export async function getOAuthConfig(provider, searchParams, baseUrlOrReq = null
     if (stored) {
       clientId     = clientId     || stored.clientId;
       clientSecret = clientSecret || stored.clientSecret;
-      scopes       = scopes       || stored.scopes;
     }
   }
 

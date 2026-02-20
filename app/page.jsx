@@ -144,7 +144,7 @@ export default function App() {
   const [catFilter,     setCatFilter]     = useState("All");
   const [connFilter,    setConnFilter]    = useState("all"); // all | connected | notConnected
   const [activeAuthTab, setActiveAuthTab] = useState("oauth");
-  const [customConfig,  setCustomConfig]  = useState({ clientId: "", clientSecret: "", redirectUri: "", scopes: "" });
+  const [customConfig,  setCustomConfig]  = useState({ clientId: "", clientSecret: "", redirectUri: "" });
   const [secretSaved,   setSecretSaved]   = useState(false);
   const [cfgSaving,     setCfgSaving]     = useState(false);
   const [cfgSavedOk,    setCfgSavedOk]    = useState(false);
@@ -244,7 +244,6 @@ export default function App() {
             clientId:     data.config.clientId     || "",
             clientSecret: data.config.clientSecret || "",
             redirectUri:  defaultRedirect,
-            scopes:       data.config.scopes       || "",
           });
           setSecretSaved(Boolean(data.config.clientSecretSaved));
           setShowSecret(false);
@@ -252,7 +251,7 @@ export default function App() {
         }
       } catch {}
     }
-    setCustomConfig({ clientId: "", clientSecret: "", redirectUri: defaultRedirect, scopes: "" });
+    setCustomConfig({ clientId: "", clientSecret: "", redirectUri: defaultRedirect });
   }
 
   /* ── Save config to DB ───────────────────────────────────────── */
@@ -291,7 +290,7 @@ export default function App() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ provider: selected.id }),
       });
-      setCustomConfig(prev => ({ ...prev, clientId: "", clientSecret: "", scopes: "" }));
+      setCustomConfig(prev => ({ ...prev, clientId: "", clientSecret: "" }));
       setSecretSaved(false);
       await reloadTokens();
       notify("success", "Configuration deleted from DB");
@@ -791,14 +790,6 @@ export default function App() {
                         </div>
                       </div>
 
-                      <div className="form-row">
-                        <div className="form-label">Scopes <span style={{ opacity: 0.5, textTransform: "none", fontWeight: 400 }}>(optional)</span></div>
-                        <input
-                          placeholder="e.g. user:email read:org"
-                          value={customConfig.scopes}
-                          onChange={e => setCustomConfig({ ...customConfig, scopes: e.target.value })}
-                        />
-                      </div>
 
                       <div className="form-row">
                         <div className="form-label">Redirect URI</div>
