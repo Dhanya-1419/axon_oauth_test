@@ -33,15 +33,15 @@ export async function GET(req) {
     }
 
     // Exchange authorization code for access token
+    const basicAuth = Buffer.from(`${clientId}:${clientSecret}`).toString("base64");
     const tokenResponse = await fetch("https://auth.calendly.com/oauth/token", {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
+        "Authorization": `Basic ${basicAuth}`,
       },
       body: new URLSearchParams({
         grant_type: "authorization_code",
-        client_id: clientId,
-        client_secret: clientSecret,
         code: code,
         redirect_uri: redirectUri,
         code_verifier: codeVerifier || "",
