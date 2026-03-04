@@ -94,7 +94,8 @@ function UIIcon({ name, size = 18 }) {
     eye:       <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>,
     eyeOff:    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>,
     edit:      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>,
-    activity:  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+    activity:  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>,
+    copy:      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
   };
   return icons[name] || null;
 }
@@ -164,6 +165,10 @@ export default function App() {
   const [disconnecting, setDisconnecting] = useState(null);
   const [logs,          setLogs]          = useState([]);
   const [loadingLogs,   setLoadingLogs]   = useState(false);
+  const [showTokenDetails, setShowTokenDetails] = useState(false);
+  const [currentTokenDetails, setCurrentTokenDetails] = useState(null);
+  const [loadingTokenDetails, setLoadingTokenDetails] = useState(false);
+  const [showFullToken, setShowFullToken] = useState(false);
 
   const selected = useMemo(() => ALL_PROVIDERS.find(p => p.id === selectedId), [selectedId]);
 
@@ -196,6 +201,33 @@ export default function App() {
   }, [fetchLogs]);
 
   useEffect(() => { reloadTokens(); }, [reloadTokens]);
+
+  /* ── Fetch detailed token information ────────────────────────────── */
+  const fetchTokenDetails = useCallback(async (provider) => {
+    setLoadingTokenDetails(true);
+    try {
+      const res = await fetch(`/api/oauth/tokens/details?provider=${encodeURIComponent(provider)}`);
+      const data = await res.json();
+
+      if (res.ok) {
+        setCurrentTokenDetails(data);
+        setShowTokenDetails(true);
+      } else {
+        notify("error", data.error || "Failed to fetch token details");
+      }
+    } catch (error) {
+      notify("error", "Failed to fetch token details");
+      console.error("Error fetching token details:", error);
+    }
+    setLoadingTokenDetails(false);
+  }, []);
+
+  /* ── Format access token for display ──────────────────────────────── */
+  const formatToken = (token, showFull = false) => {
+    if (!token) return 'N/A';
+    if (showFull) return token;
+    return token.length > 20 ? `${token.substring(0, 20)}...` : token;
+  };
 
   /* ── Handle OAuth redirect params ────────────────────────────── */
   useEffect(() => {
@@ -960,6 +992,95 @@ export default function App() {
                       {isConnected && (
                         <div style={{ background: "rgba(16,185,129,0.06)", border: "1px solid rgba(16,185,129,0.2)", borderRadius: 10, padding: "14px 16px", fontSize: "0.8rem", color: "#6ee7b7" }}>
                           ✅ Token is active. You can run a connection test below.
+                        </div>
+                      )}
+
+                      {/* ── Access Token Display ── */}
+                      {isConnected && (
+                        <div>
+                          <div className="sep" />
+                          <div className="form-label" style={{ marginBottom: 10 }}>Access Token Details</div>
+                          <div style={{ background: "rgba(59,130,246,0.06)", border: "1px solid rgba(59,130,246,0.2)", borderRadius: 10, padding: "14px 16px", fontSize: "0.8rem" }}>
+                            <button
+                              className="btn-ghost btn-sm"
+                              onClick={() => fetchTokenDetails(selected.id)}
+                              disabled={loadingTokenDetails}
+                              style={{ marginBottom: 10 }}
+                            >
+                              {loadingTokenDetails ? (
+                                <>
+                                  <span className="spin" style={{ marginRight: 8 }}>↻</span>
+                                  Loading...
+                                </>
+                              ) : (
+                                <>
+                                  <span style={{ marginRight: 8 }}>🔑</span>
+                                  Show Access Token
+                                </>
+                              )}
+                            </button>
+
+                            {showTokenDetails && currentTokenDetails && (
+                              <div style={{ marginTop: 10 }}>
+                                <div style={{ display: "grid", gap: "8px", gridTemplateColumns: "120px 1fr", fontSize: "0.75rem" }}>
+                                  <div style={{ fontWeight: 600, opacity: 0.8 }}>Provider:</div>
+                                  <div>{currentTokenDetails.provider}</div>
+
+                                  <div style={{ fontWeight: 600, opacity: 0.8 }}>Token Type:</div>
+                                  <div>{currentTokenDetails.token_type || 'Bearer'}</div>
+
+                                  <div style={{ fontWeight: 600, opacity: 0.8 }}>Access Token:</div>
+                                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                    <code style={{
+                                      background: "rgba(0,0,0,0.2)",
+                                      padding: "4px 8px",
+                                      borderRadius: 4,
+                                      fontFamily: "monospace",
+                                      fontSize: "0.7rem",
+                                      wordBreak: "break-all",
+                                      flex: 1
+                                    }}>
+                                      {formatToken(currentTokenDetails.access_token, showFullToken)}
+                                    </code>
+                                    <button
+                                      className="btn-ghost btn-sm"
+                                      onClick={() => setShowFullToken(!showFullToken)}
+                                      title={showFullToken ? "Hide full token" : "Show full token"}
+                                    >
+                                      <UIIcon name={showFullToken ? "eyeOff" : "eye"} size={14} />
+                                    </button>
+                                    <button
+                                      className="btn-ghost btn-sm"
+                                      onClick={() => {
+                                        navigator.clipboard.writeText(currentTokenDetails.access_token);
+                                        notify("success", "Access token copied to clipboard!");
+                                      }}
+                                      title="Copy to clipboard"
+                                    >
+                                      <UIIcon name="copy" size={14} />
+                                    </button>
+                                  </div>
+
+                                  {currentTokenDetails.expires_at && (
+                                    <>
+                                      <div style={{ fontWeight: 600, opacity: 0.8 }}>Expires At:</div>
+                                      <div>{new Date(currentTokenDetails.expires_at).toLocaleString()}</div>
+                                    </>
+                                  )}
+
+                                  {currentTokenDetails.scope && (
+                                    <>
+                                      <div style={{ fontWeight: 600, opacity: 0.8 }}>Scope:</div>
+                                      <div>{currentTokenDetails.scope}</div>
+                                    </>
+                                  )}
+
+                                  <div style={{ fontWeight: 600, opacity: 0.8 }}>Has Refresh:</div>
+                                  <div>{currentTokenDetails.has_refresh_token ? "Yes" : "No"}</div>
+                                </div>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       )}
 
