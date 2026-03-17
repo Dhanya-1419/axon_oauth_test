@@ -27,7 +27,7 @@ function pickAny(values, key, envKeys) {
 function required(picked, keys) {
   const missing = keys.filter((k) => !picked?.[k] || String(picked[k]).trim() === "");
   if (missing.length) {
-    const err = new Error(`Missing fields: ${missing.join(", ")}`);
+    const err = new Error(`Missing required fields: ${missing.join(", ")}. Please check your environment variables or form inputs.`);
     err.status = 400;
     throw err;
   }
@@ -410,6 +410,140 @@ export async function POST(req) {
         return json({ appId, request: { url, method: "GET" }, response: r }, { status: r.ok ? 200 : 400 });
       }
 
+      case "supabase": {
+        const picked = { 
+          url: pick(values, "url", "SUPABASE_URL"),
+          apiKey: pick(values, "apiKey", "SUPABASE_ANON_KEY")
+        };
+        required(picked, ["url", "apiKey"]);
+        
+        // Test projects endpoint
+        const projectsUrl = `${picked.url}/rest/v1/projects`;
+        const projectsResponse = await fetchJson(projectsUrl, {
+          headers: {
+            "apikey": picked.apiKey,
+            "Authorization": `Bearer ${picked.apiKey}`,
+            "Content-Type": "application/json",
+          }
+        });
+        
+        return json({ 
+          appId, 
+          request: { url: projectsUrl, method: "GET" }, 
+          response: projectsResponse 
+        }, { status: projectsResponse.ok ? 200 : 400 });
+      }
+
+      case "databricks": {
+        const picked = { 
+          apiKey: pick(values, "apiKey", "DATABRICKS_API_KEY"),
+          workspaceUrl: pick(values, "workspaceUrl", "DATABRICKS_WORKSPACE_URL")
+        };
+        required(picked, ["apiKey", "workspaceUrl"]);
+        
+        // Validate workspace URL format
+        if (!picked.workspaceUrl.startsWith('https://') || picked.workspaceUrl.includes('your-workspace')) {
+          const err = new Error('Invalid Databricks workspace URL. Please set a valid workspace URL (e.g., https://your-actual-workspace.databricks.com)');
+          err.status = 400;
+          throw err;
+        }
+        
+        const clustersUrl = `${picked.workspaceUrl}/api/2.0/clusters/list`;
+        const clustersResponse = await fetchJson(clustersUrl, {
+          headers: {
+            "Authorization": `Bearer ${picked.apiKey}`,
+            "Content-Type": "application/json",
+          }
+        });
+        
+        return json({ 
+          appId, 
+          request: { url: clustersUrl, method: "GET" }, 
+          response: clustersResponse 
+        }, { status: clustersResponse.ok ? 200 : 400 });
+      }
+
+      case "coda": {
+        const picked = { 
+          token: pick(values, "token", "CODA_API_KEY")
+        };
+        required(picked, ["token"]);
+        
+        const docsUrl = "https://coda.io/apis/v1/docs";
+        const docsResponse = await fetchJson(docsUrl, {
+          headers: {
+            "Authorization": `Bearer ${picked.token}`,
+            "Content-Type": "application/json",
+          }
+        });
+        
+        return json({ 
+          appId, 
+          request: { url: docsUrl, method: "GET" }, 
+          response: docsResponse 
+        }, { status: docsResponse.ok ? 200 : 400 });
+      }
+
+      case "guru": {
+        const picked = { 
+          token: pick(values, "token", "GURU_USER_TOKEN")
+        };
+        required(picked, ["token"]);
+        
+        // Try multiple Guru API endpoints
+        const endpoints = [
+          "https://api.getguru.com/api/v1/user/me",
+          "https://api.getguru.com/api/v2/user/me",
+          "https://api.getguru.com/api/v1/users/me",
+          "https://api.getguru.com/api/v2/users/me"
+        ];
+        
+        let userResponse = null;
+        let workingEndpoint = null;
+        
+        for (const endpoint of endpoints) {
+          try {
+            userResponse = await fetchJson(endpoint, {
+              headers: {
+                "Authorization": `Bearer ${picked.token}`,
+                "Content-Type": "application/json",
+              }
+            });
+            if (userResponse.ok) {
+              workingEndpoint = endpoint;
+              break;
+            }
+          } catch (error) {
+            console.log(`Failed endpoint ${endpoint}:`, error.message);
+            continue;
+          }
+        }
+        
+        if (!userResponse || !userResponse.ok) {
+          // Try a different approach - get cards instead
+          const cardsResponse = await fetchJson("https://api.getguru.com/api/v1/cards", {
+            headers: {
+              "Authorization": `Bearer ${picked.token}`,
+              "Content-Type": "application/json",
+            }
+          });
+          
+          return json({ 
+            appId, 
+            request: { url: "https://api.getguru.com/api/v1/cards", method: "GET" }, 
+            response: cardsResponse,
+            note: userResponse.ok ? "User endpoint working" : "Tried cards endpoint as fallback"
+          }, { status: cardsResponse.ok ? 200 : 400 });
+        }
+        
+        return json({ 
+          appId, 
+          request: { url: workingEndpoint, method: "GET" }, 
+          response: userResponse,
+          note: `Working endpoint: ${workingEndpoint}`
+        }, { status: 200 });
+      }
+
       default:
         return json(
           {
@@ -433,7 +567,26 @@ export async function POST(req) {
               "zoom",
               "docusign",
               "quickbooks",
-              "paypal"
+              "paypal",
+              "discord",
+              "zoho",
+              "xero",
+              "zendesk",
+              "intercom",
+              "monday",
+              "linear",
+              "trello",
+              "gitlab",
+              "bitbucket",
+              "bigquery",
+              "signnow",
+              "adobe",
+              "databricks",
+              "supabase",
+              "coda",
+              "guru",
+              "firebase",
+              "notion"
             ]
           },
           { status: 400 }

@@ -7,6 +7,7 @@ import Link from "next/link";
 const BRAND = {
   github:     { slug: "github",     bg: "rgba(255,255,255,0.08)" },
   slack:      { slug: "slack",      bg: "rgba(74,21,75,0.25)" },
+  discord:    { slug: "discord",    bg: "rgba(88,101,242,0.15)" },
   jira:       { slug: "jira",       bg: "rgba(0,82,204,0.18)" },
   confluence: { slug: "confluence", bg: "rgba(0,82,204,0.18)" },
   notion:     { slug: "notion",     bg: "rgba(255,255,255,0.07)" },
@@ -21,11 +22,30 @@ const BRAND = {
   zoom:       { slug: "zoom",       bg: "rgba(45,140,255,0.15)" },
   docusign:   { slug: "docusign",   bg: "rgba(255,182,0,0.12)" },
   hubspot:    { slug: "hubspot",    bg: "rgba(255,122,89,0.15)" },
+  zoho:       { slug: "zoho",       bg: "rgba(0,136,204,0.15)" },
   mailchimp:  { slug: "mailchimp",  bg: "rgba(255,224,27,0.10)" },
   eventbrite: { slug: "eventbrite", bg: "rgba(240,85,55,0.15)" },
   stripe:     { slug: "stripe",     bg: "rgba(99,91,255,0.15)" },
   paypal:     { slug: "paypal",     bg: "rgba(0,112,186,0.15)" },
   quickbooks: { slug: "quickbooks", bg: "rgba(44,160,28,0.15)" },
+  xero:       { slug: "xero",       bg: "rgba(13,71,161,0.15)" },
+  zendesk:    { slug: "zendesk",    bg: "rgba(33,94,153,0.15)" },
+  intercom:   { slug: "intercom",   bg: "rgba(19,124,189,0.15)" },
+  monday:     { slug: "monday",     bg: "rgba(255,130,0,0.15)" },
+  linear:     { slug: "linear",     bg: "rgba(15,23,42,0.15)" },
+  trello:     { slug: "trello",     bg: "rgba(0,131,143,0.15)" },
+  gitlab:     { slug: "gitlab",     bg: "rgba(252,77,27,0.15)" },
+  bitbucket:  { slug: "bitbucket",  bg: "rgba(0,82,204,0.15)" },
+  bigquery:   { slug: "bigquery",   bg: "rgba(66,133,244,0.15)" },
+  ticketbud:  { slug: "ticketbud",  bg: "rgba(0,123,255,0.15)" },
+  signnow:    { slug: "signnow",    bg: "rgba(0,123,255,0.15)" },
+  adobe:      { slug: "adobe",      bg: "rgba(255,0,0,0.15)" },
+  databricks: { slug: "databricks", bg: "rgba(255,0,255,0.15)" },
+  notion:     { slug: "notion",     bg: "rgba(255,255,255,0.07)" },
+  supabase:   { slug: "supabase",   bg: "rgba(0,255,128,0.15)" },
+  coda:       { slug: "coda",       bg: "rgba(0,123,255,0.15)" },
+  guru:       { slug: "guru",       bg: "rgba(255,165,0,0.15)" },
+  firebase:   { slug: "firebase",   bg: "rgba(255,203,5,0.15)" },
   salesforce: { slug: "salesforce", bg: "rgba(0,161,224,0.15)" },
   airtable:   { slug: "airtable",   bg: "rgba(24,191,255,0.12)" },
   jotform:    { slug: "jotform",    bg: "rgba(255,97,0,0.15)" },
@@ -38,38 +58,57 @@ const ALL_PROVIDERS = [
   // ── Collaboration ──
   { id: "github",     name: "GitHub",         category: "Collaboration", authTypes: ["oauth", "token"], hint: "GitHub API v3 — OAuth 2.0 recommended for user-facing apps.", fields: { token: [{ key: "token", label: "Personal Access Token", placeholder: "ghp_..." }] } },
   { id: "slack",      name: "Slack",          category: "Collaboration", authTypes: ["oauth", "token"], hint: "Connect your Slack workspace via OAuth or Bot Token.", fields: { token: [{ key: "token", label: "Bot/User Token", placeholder: "xoxb-..." }] } },
+  { id: "discord",    name: "Discord",        category: "Collaboration", authTypes: ["oauth"], hint: "Discord API — User info, guilds, and server management." },
   { id: "jira",       name: "Jira",           category: "Collaboration", authTypes: ["oauth", "basic"], hint: "Atlassian Cloud OAuth 2.0 (3LO) or Basic Auth with API Token.", fields: { basic: [{ key: "siteUrl", label: "Site URL", placeholder: "https://your-domain.atlassian.net" }, { key: "email", label: "Email", placeholder: "you@company.com" }, { key: "apiToken", label: "API Token", placeholder: "Atlassian API token" }] } },
   { id: "confluence", name: "Confluence",     category: "Collaboration", authTypes: ["oauth", "basic"], hint: "Atlassian Cloud OAuth 2.0 or Basic Auth.", fields: { basic: [{ key: "siteUrl", label: "Site URL", placeholder: "https://your-domain.atlassian.net" }, { key: "email", label: "Email", placeholder: "you@company.com" }, { key: "apiToken", label: "API Token", placeholder: "Token" }] } },
   { id: "notion",     name: "Notion",         category: "Collaboration", authTypes: ["oauth", "token"], hint: "Notion API v1 — OAuth for public apps.", fields: { token: [{ key: "token", label: "Integration Secret", placeholder: "secret_..." }] } },
   { id: "clickup",    name: "ClickUp",        category: "Collaboration", authTypes: ["oauth", "token"], hint: "ClickUp API v2.", fields: { token: [{ key: "token", label: "API Key", placeholder: "pk_..." }] } },
   { id: "asana",      name: "Asana",          category: "Collaboration", authTypes: ["oauth", "token"], hint: "Asana API v1.", fields: { token: [{ key: "token", label: "Personal Access Token", placeholder: "1/..." }] } },
   { id: "figma",      name: "Figma",          category: "Collaboration", authTypes: ["oauth", "token"], hint: "Figma API v1.", fields: { token: [{ key: "token", label: "Personal Access Token", placeholder: "figd_" }] } },
+  { id: "monday",     name: "Monday.com",      category: "Collaboration", authTypes: ["oauth"], hint: "Monday.com Work OS — Boards, items, teams, and project management." },
+  { id: "linear",     name: "Linear",         category: "Collaboration", authTypes: ["oauth"], hint: "Linear Issue Tracking — Projects, issues, teams, and workflow management." },
+  { id: "trello",     name: "Trello",         category: "Collaboration", authTypes: ["oauth"], hint: "Trello Project Management — Boards, cards, lists, and team collaboration." },
+  { id: "gitlab",     name: "GitLab",         category: "Collaboration", authTypes: ["oauth"], hint: "GitLab DevOps Platform — Repositories, projects, CI/CD, and code collaboration." },
+  { id: "bitbucket",  name: "Bitbucket",      category: "Collaboration", authTypes: ["oauth"], hint: "Bitbucket Code Hosting — Git repositories, pull requests, and team collaboration." },
+  { id: "coda",       name: "Coda",           category: "Collaboration", authTypes: ["token"], hint: "Coda Documents API — Token-based access to docs and databases.", fields: { token: [{ key: "token", label: "API Token", placeholder: "..." }] } },
+  { id: "guru",       name: "Guru",           category: "Collaboration", authTypes: ["token"], hint: "Guru Knowledge Management — Token-based access to cards, collections, and teams.", fields: { token: [{ key: "token", label: "User Token", placeholder: "..." }] } },
 
   // ── Productivity ──
   { id: "google",     name: "Google",         category: "Productivity",  authTypes: ["oauth"], hint: "Google OAuth 2.0 — Calendar, Drive, Gmail, Contacts, Docs." },
+  { id: "bigquery",   name: "BigQuery",       category: "Productivity",  authTypes: ["oauth"], hint: "Google BigQuery — Data warehouse and analytics platform using Google OAuth credentials." },
   { id: "microsoft",  name: "Microsoft",      category: "Productivity",  authTypes: ["oauth"], hint: "Microsoft Graph API — Outlook, Teams, OneDrive, SharePoint." },
   { id: "calendly",   name: "Calendly",       category: "Productivity",  authTypes: ["oauth", "token"], hint: "Calendly API v2.", fields: { token: [{ key: "token", label: "Access Token", placeholder: "eyJ..." }] } },
   { id: "dropbox",    name: "Dropbox",        category: "Productivity",  authTypes: ["oauth", "token"], hint: "Dropbox API v2.", fields: { token: [{ key: "token", label: "Access Token", placeholder: "sl." }] } },
   { id: "box",        name: "Box",            category: "Productivity",  authTypes: ["oauth", "token"], hint: "Box API v2.", fields: { token: [{ key: "token", label: "Access Token", placeholder: "..." }] } },
   { id: "zoom",       name: "Zoom",           category: "Productivity",  authTypes: ["oauth"], hint: "Zoom API — Meetings, Webinars, Recordings." },
   { id: "docusign",   name: "DocuSign",       category: "Productivity",  authTypes: ["oauth"], hint: "DocuSign eSignature API via OAuth 2.0." },
+  { id: "signnow",    name: "SignNow",        category: "Productivity",  authTypes: ["oauth"], hint: "SignNow eSignature API — Document signing, templates, and workflow management." },
+  { id: "adobe",      name: "Adobe",          category: "Productivity",  authTypes: ["oauth"], hint: "Adobe Creative Cloud API — User management, organizations, and creative projects." },
+  { id: "databricks", name: "Databricks",     category: "Productivity",  authTypes: ["token"], hint: "Databricks Data Platform — Clusters, jobs, notebooks, and workspace management.", fields: { token: [{ key: "apiKey", label: "API Key", placeholder: "dapi..." }] } },
+  { id: "firebase",   name: "Firebase",       category: "Productivity",  authTypes: ["oauth"], hint: "Firebase Backend Platform — Authentication, database, storage, and hosting services via Google OAuth." },
 
   // ── Marketing ──
   { id: "hubspot",    name: "HubSpot",        category: "Marketing",     authTypes: ["oauth", "token"], hint: "HubSpot CRM API v3.", fields: { token: [{ key: "token", label: "Access Token", placeholder: "pat.na1..." }] } },
   { id: "mailchimp",  name: "Mailchimp",      category: "Marketing",     authTypes: ["oauth", "basic"], hint: "Mailchimp Marketing API.", fields: { basic: [{ key: "apiKey", label: "API Key", placeholder: "..." }, { key: "serverPrefix", label: "Server Prefix", placeholder: "usX" }] } },
   { id: "eventbrite", name: "Eventbrite",     category: "Marketing",     authTypes: ["oauth", "token"], hint: "Eventbrite API v3.", fields: { token: [{ key: "token", label: "Private Token", placeholder: "..." }] } },
+  { id: "ticketbud",  name: "Ticketbud",       category: "Marketing",     authTypes: ["token"], hint: "Ticketbud Event Management API — Events, tickets, and attendee management.", fields: { token: [{ key: "apiKey", label: "API Key", placeholder: "VIhRFqRFOFhfqNldJIYPznXF44fsnX3rALLm8tJvz0c" }] } },
 
   // ── Finance ──
   { id: "stripe",     name: "Stripe",         category: "Finance",       authTypes: ["oauth", "basic"], hint: "Stripe API v1. OAuth for Connect apps.", fields: { basic: [{ key: "secretKey", label: "Secret Key", placeholder: "sk_live_..." }] } },
   { id: "paypal",     name: "PayPal",         category: "Finance",       authTypes: ["oauth"], hint: "PayPal REST API via OAuth 2.0." },
   { id: "quickbooks", name: "QuickBooks",     category: "Finance",       authTypes: ["oauth"], hint: "Intuit QuickBooks Online API via OAuth 2.0." },
+  { id: "xero",       name: "Xero",           category: "Finance",       authTypes: ["oauth"], hint: "Xero Accounting API — Invoicing, contacts, reports, and financial data." },
 
   // ── CRM & Data ──
   { id: "salesforce", name: "Salesforce",     category: "CRM & Data",    authTypes: ["oauth"], hint: "Salesforce REST API via OAuth 2.0." },
+  { id: "zoho",       name: "Zoho CRM",       category: "CRM & Data",    authTypes: ["oauth"], hint: "Zoho CRM API v2 — Modules, Leads, Contacts, and more." },
+  { id: "zendesk",    name: "Zendesk",        category: "CRM & Data",    authTypes: ["oauth"], hint: "Zendesk Support API — Tickets, users, groups, and help desk management." },
+  { id: "intercom",   name: "Intercom",       category: "CRM & Data",    authTypes: ["oauth"], hint: "Intercom Customer Communication API — Conversations, users, and support." },
   { id: "airtable",   name: "Airtable",       category: "CRM & Data",    authTypes: ["oauth", "token"], hint: "Airtable API — PAT recommended.", fields: { token: [{ key: "token", label: "Personal Access Token", placeholder: "pat..." }] } },
   { id: "jotform",    name: "Jotform",        category: "CRM & Data",    authTypes: ["token"], hint: "Jotform API via API Key.", fields: { token: [{ key: "apiKey", label: "API Key", placeholder: "..." }] } },
   { id: "digisign",   name: "DigiSigner",     category: "CRM & Data",    authTypes: ["token"], hint: "DigiSigner e-Signature API.", fields: { token: [{ key: "apiKey", label: "API Key", placeholder: "..." }, { key: "baseUrl", label: "Base URL", placeholder: "https://api.digisigner.com/v1" }] } },
   { id: "snowflake",  name: "Snowflake",      category: "CRM & Data",    authTypes: ["custom"], hint: "Snowflake SQL access.", fields: { custom: [{ key: "account", label: "Account", placeholder: "xy12345.eu-central-1" }, { key: "user", label: "User", placeholder: "..." }, { key: "password", label: "Password", placeholder: "..." }, { key: "warehouse", label: "Warehouse", placeholder: "..." }, { key: "role", label: "Role", placeholder: "..." }] } },
+  { id: "supabase",   name: "Supabase",       category: "CRM & Data",    authTypes: ["token"], hint: "Supabase Backend-as-a-Service — Database, auth, storage, and real-time APIs.", fields: { token: [{ key: "url", label: "Project URL", placeholder: "https://your-project.supabase.co" }, { key: "apiKey", label: "Anon Key", placeholder: "eyJ..." }] } },
 ];
 
 const CATEGORIES = ["All", "Collaboration", "Productivity", "Marketing", "Finance", "CRM & Data"];
@@ -86,6 +125,7 @@ function UIIcon({ name, size = 18 }) {
   const icons = {
     dashboard: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>,
     connected: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>,
+    connectedApp: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>,
     tokens:    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 21L15 15M17 11C17 14.3137 14.3137 17 11 17C7.68629 17 5 14.3137 5 11C5 7.68629 7.68629 5 11 5C14.3137 5 17 7.68629 17 11Z"></path><path d="M7 11H15M11 7V15" strokeOpacity="0.3"></path></svg>,
     search:    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>,
     shield:    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>,
@@ -632,7 +672,7 @@ export default function App() {
                         </div>
                         <div style={{ display: "flex", gap: 5 }}>
                           {isConfigured && !isConnected && <span className="pill pill-indigo" style={{ fontSize: '0.65rem' }}>Configured</span>}
-                          {isConnected && <span className="pill pill-green">✓</span>}
+                          {isConnected && <UIIcon name="connectedApp" size={18} />}
                         </div>
                       </div>
                       <div>
