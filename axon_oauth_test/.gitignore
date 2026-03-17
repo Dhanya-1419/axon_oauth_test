@@ -1,0 +1,43 @@
+# Dependencies
+node_modules
+.pnp
+.pnp.js
+
+# Build / Next.js
+.next
+out
+.vercel
+.turbo
+
+# Environment & secrets (keep .env.example)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env*.local
+.env.example
+
+# OAuth / tokens
+token.json
+*.credentials.json
+
+# Logs & debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE (uncomment if you don't want to commit editor config)
+# .idea
+# .vscode
+
+# Local helper scripts (push/setup one-offs)
+github-push-*.js
+final-github-solution.md
+github-push-solution.md
