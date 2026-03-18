@@ -74,7 +74,7 @@ const ALL_PROVIDERS = [
   { id: "guru",       name: "Guru",           category: "Collaboration", authTypes: ["token"], hint: "Guru Knowledge Management — Token-based access to cards, collections, and teams.", fields: { token: [{ key: "token", label: "User Token", placeholder: "..." }] } },
 
   // ── Productivity ──
-  { id: "google",     name: "Google",         category: "Productivity",  authTypes: ["oauth"], hint: "Google OAuth 2.0 — Calendar, Drive, Gmail, Contacts, Docs." },
+  { id: "google",     name: "Google",         category: "Productivity",  authTypes: ["oauth"], hint: "Google OAuth 2.0 — Basic access (email, profile). For Gmail/Drive, configure custom scopes in settings.", fields: { oauth: [{ key: "scopes", label: "Custom Scopes", placeholder: "https://www.googleapis.com/auth/gmail.modify https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/documents https://www.googleapis.com/auth/contacts", hint: "⚠️ Gmail/Drive scopes require Google verification for production" }] } },
   { id: "bigquery",   name: "BigQuery",       category: "Productivity",  authTypes: ["oauth"], hint: "Google BigQuery — Data warehouse and analytics platform using Google OAuth credentials." },
   { id: "microsoft",  name: "Microsoft",      category: "Productivity",  authTypes: ["oauth"], hint: "Microsoft Graph API — Outlook, Teams, OneDrive, SharePoint." },
   { id: "calendly",   name: "Calendly",       category: "Productivity",  authTypes: ["oauth", "token"], hint: "Calendly API v2.", fields: { token: [{ key: "token", label: "Access Token", placeholder: "eyJ..." }] } },

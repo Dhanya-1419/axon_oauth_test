@@ -8,14 +8,14 @@
  * ─────────────────────────────────────────────────────────────────────
  */
 
-import { readFileSync } from "fs";
+import { readFileSync, existsSync } from "fs";
 import { fileURLToPath } from "url";
 import path from "path";
 import { neon } from "@neondatabase/serverless";
 
 // ── Load .env.local manually ─────────────────────────────────────────
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const envPath = path.resolve(__dirname, "../.env.local");
+const envPath = existsSync(path.resolve(__dirname, "../.env.local")) ? path.resolve(__dirname, "../.env.local") : path.resolve(__dirname, "../.env");
 
 const envRaw = readFileSync(envPath, "utf8");
 const env = {};
@@ -180,6 +180,91 @@ const providers = [
     provider: "digisign",
     clientId:     env["DIGISIGN_API_KEY"],
     clientSecret: null,
+  },
+  {
+    provider: "discord",
+    clientId:     env["DISCORD_CLIENT_ID"],
+    clientSecret: env["DISCORD_CLIENT_SECRET"],
+  },
+  {
+    provider: "zoho",
+    clientId:     env["ZOHO_CLIENT_ID"],
+    clientSecret: env["ZOHO_CLIENT_SECRET"],
+  },
+  {
+    provider: "xero",
+    clientId:     env["XERO_CLIENT_ID"],
+    clientSecret: env["XERO_CLIENT_SECRET"],
+  },
+  {
+    provider: "zendesk",
+    clientId:     env["ZENDESK_CLIENT_ID"],
+    clientSecret: env["ZENDESK_CLIENT_SECRET"],
+  },
+  {
+    provider: "intercom",
+    clientId:     env["INTERCOM_CLIENT_ID"],
+    clientSecret: env["INTERCOM_CLIENT_SECRET"],
+  },
+  {
+    provider: "monday",
+    clientId:     env["MONDAY_CLIENT_ID"],
+    clientSecret: env["MONDAY_CLIENT_SECRET"],
+  },
+  {
+    provider: "linear",
+    clientId:     env["LINEAR_CLIENT_ID"],
+    clientSecret: env["LINEAR_CLIENT_SECRET"],
+  },
+  {
+    provider: "trello",
+    clientId:     env["TRELLO_CLIENT_ID"],
+    clientSecret: env["TRELLO_CLIENT_SECRET"],
+  },
+  {
+    provider: "gitlab",
+    clientId:     env["GITLAB_CLIENT_ID"],
+    clientSecret: env["GITLAB_CLIENT_SECRET"],
+  },
+  {
+    provider: "bitbucket",
+    clientId:     env["BITBUCKET_CLIENT_ID"],
+    clientSecret: env["BITBUCKET_CLIENT_SECRET"],
+  },
+  {
+    provider: "signnow",
+    clientId:     env["SIGNNOW_CLIENT_ID"],
+    clientSecret: env["SIGNNOW_CLIENT_SECRET"],
+  },
+  {
+    provider: "adobe",
+    clientId:     env["ADOBE_CLIENT_ID"],
+    clientSecret: env["ADOBE_CLIENT_SECRET"],
+  },
+  {
+    provider: "databricks",
+    clientId:     env["DATABRICKS_API_KEY"],
+    clientSecret: null,
+  },
+  {
+    provider: "supabase",
+    clientId:     env["SUPABASE_CLIENT_ID"],
+    clientSecret: env["SUPABASE_CLIENT_SECRET"],
+  },
+  {
+    provider: "coda",
+    clientId:     env["CODA_API_KEY"],
+    clientSecret: null,
+  },
+  {
+    provider: "guru",
+    clientId:     env["GURU_USER_TOKEN"],
+    clientSecret: null,
+  },
+  {
+    provider: "firebase",
+    clientId:     env["FIREBASE_CLIENT_ID"],
+    clientSecret: env["FIREBASE_CLIENT_SECRET"],
   },
 ];
 
