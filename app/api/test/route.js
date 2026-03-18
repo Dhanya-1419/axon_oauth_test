@@ -275,9 +275,14 @@ export async function POST(req) {
       }
 
       case "digisign": {
+        let baseUrl = pick(values, "baseUrl", "DIGISIGN_BASE_URL") || "https://api.digisigner.com/v1";
+        if (baseUrl.includes("www.digisigner.com")) {
+          baseUrl = baseUrl.replace("www.digisigner.com", "api.digisigner.com");
+          if (!baseUrl.includes("/v1")) baseUrl = baseUrl.replace(/\/$/, "") + "/v1";
+        }
         const picked = {
           apiKey: pick(values, "apiKey", "DIGISIGN_API_KEY"),
-          baseUrl: pick(values, "baseUrl", "DIGISIGN_BASE_URL") || "https://api.digisigner.com/v1"
+          baseUrl
         };
         required(picked, ["apiKey"]);
 
