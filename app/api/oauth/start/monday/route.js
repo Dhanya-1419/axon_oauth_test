@@ -12,16 +12,12 @@ export async function GET() {
 
   // Generate a random state for security
   const state = Math.random().toString(36).substring(2, 15);
-  
-  // Store state temporarily (in production, use Redis or database)
-  global.mondayOAuthState = global.mondayOAuthState || {};
-  global.mondayOAuthState[state] = Date.now();
 
   const mondayAuthUrl = new URL("https://auth.monday.com/oauth2/authorize");
   mondayAuthUrl.searchParams.append("client_id", clientId);
   mondayAuthUrl.searchParams.append("redirect_uri", redirectUri);
   mondayAuthUrl.searchParams.append("response_type", "code");
-  mondayAuthUrl.searchParams.append("scope", "boards:read boards:write items:read updates:read teams:read users:read account:read");
+  mondayAuthUrl.searchParams.append("scope", "boards:read boards:write updates:read teams:read users:read account:read");
   mondayAuthUrl.searchParams.append("state", state);
 
   return NextResponse.redirect(mondayAuthUrl.toString());

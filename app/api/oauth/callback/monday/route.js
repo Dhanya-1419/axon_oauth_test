@@ -17,12 +17,9 @@ export async function GET(request) {
   }
 
   // Validate state
-  if (!state || !global.mondayOAuthState?.[state]) {
+  if (!state) {
     return NextResponse.redirect(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}?error=invalid_state`);
   }
-
-  // Clean up state
-  delete global.mondayOAuthState[state];
 
   try {
     const clientId = process.env.MONDAY_CLIENT_ID;
