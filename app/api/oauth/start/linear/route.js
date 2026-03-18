@@ -21,7 +21,7 @@ export async function GET() {
   linearAuthUrl.searchParams.append("client_id", clientId);
   linearAuthUrl.searchParams.append("redirect_uri", redirectUri);
   linearAuthUrl.searchParams.append("response_type", "code");
-  linearAuthUrl.searchParams.append("scope", "read write issues:read comments:read projects:read teams:read");
+  linearAuthUrl.searchParams.append("scope", "read,write");
   linearAuthUrl.searchParams.append("state", state);
   linearAuthUrl.searchParams.append("actor", "application");
 
