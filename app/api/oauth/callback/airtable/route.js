@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getOAuthConfig, getBaseUrl } from "../../utils";
 import { logActivity } from "../../db.js";
+import { cookies } from "next/headers";
 
 export const runtime = "nodejs";
 
@@ -30,6 +31,13 @@ export async function GET(req) {
   try {
     // Airtable requires Basic auth for token exchange
     const credentials = Buffer.from(`${clientId}:${clientSecret}`).toString("base64");
+    
+    // Retrieve and clear code_verifier for PKCE
+    const codeVerifier = cookies().get("airtable_code_verifier")?.value;
+    if (!codeVerifier) {
+      throw new Error("Missing PKCE code_verifier cookie. Check if cookies are enabled and try again.");
+    }
+    cookies().delete("airtable_code_verifier");
 
     const tokenRes = await fetch("https://airtable.com/oauth2/v1/token", {
       method: "POST",
@@ -41,6 +49,7 @@ export async function GET(req) {
         grant_type: "authorization_code",
         code,
         redirect_uri: redirectUri,
+        code_verifier: codeVerifier,
       }),
     });
 

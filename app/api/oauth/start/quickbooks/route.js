@@ -16,7 +16,7 @@ export async function GET(req) {
   authUrl.searchParams.set("redirect_uri", redirectUri);
   authUrl.searchParams.set("response_type", "code");
   if (scopes) authUrl.searchParams.set("scope", scopes || "com.intuit.quickbooks.accounting");
-  
+
   authUrl.searchParams.set("access_type", "offline");
   authUrl.searchParams.set("prompt", "consent");
   authUrl.searchParams.set("state", Math.random().toString(36).substring(7));
