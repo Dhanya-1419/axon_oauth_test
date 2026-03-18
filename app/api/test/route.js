@@ -277,7 +277,7 @@ export async function POST(req) {
       case "digisign": {
         const picked = {
           apiKey: pick(values, "apiKey", "DIGISIGN_API_KEY"),
-          baseUrl: pick(values, "baseUrl", "DIGISIGN_BASE_URL")
+          baseUrl: pick(values, "baseUrl", "DIGISIGN_BASE_URL") || "https://api.digisigner.com/v1"
         };
         required(picked, ["apiKey"]);
 
