@@ -12,10 +12,6 @@ export async function GET() {
 
   // Generate a random state for security
   const state = Math.random().toString(36).substring(2, 15);
-  
-  // Store state temporarily (in production, use Redis or database)
-  global.linearOAuthState = global.linearOAuthState || {};
-  global.linearOAuthState[state] = Date.now();
 
   const linearAuthUrl = new URL("https://linear.app/oauth/authorize");
   linearAuthUrl.searchParams.append("client_id", clientId);

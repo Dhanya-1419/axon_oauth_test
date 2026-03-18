@@ -17,12 +17,9 @@ export async function GET(request) {
   }
 
   // Validate state
-  if (!state || !global.linearOAuthState?.[state]) {
+  if (!state) {
     return NextResponse.redirect(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}?error=invalid_state`);
   }
-
-  // Clean up state
-  delete global.linearOAuthState[state];
 
   try {
     const clientId = process.env.LINEAR_CLIENT_ID;
