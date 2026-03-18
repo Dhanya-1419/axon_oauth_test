@@ -544,6 +544,31 @@ export async function POST(req) {
         }, { status: 200 });
       }
 
+      case "snowflake": {
+        const picked = {
+          account: pick(values, "account", "SNOWFLAKE_ACCOUNT"),
+          user: pick(values, "user", "SNOWFLAKE_USER"),
+          password: pick(values, "password", "SNOWFLAKE_PASSWORD"),
+          warehouse: pick(values, "warehouse", "SNOWFLAKE_WAREHOUSE"),
+          role: pick(values, "role", "SNOWFLAKE_ROLE"),
+        };
+        required(picked, ["account", "user", "password"]);
+        
+        // Basic reachability test for the Snowflake account
+        const url = `https://${picked.account.replace(/\.snowflakecomputing\.com$/, '')}.snowflakecomputing.com`;
+        const r = await fetchJson(url);
+        
+        return json({ 
+          appId, 
+          request: { url, method: "GET" }, 
+          response: { 
+            ok: r.ok, 
+            status: r.status, 
+            message: r.ok ? "Snowflake account is reachable. SQL API testing requires JWT/Key-Pair auth for full verification." : "Could not reach Snowflake account URL."
+          } 
+        }, { status: r.ok ? 200 : 400 });
+      }
+
       default:
         return json(
           {
@@ -585,8 +610,8 @@ export async function POST(req) {
               "supabase",
               "coda",
               "guru",
-              "firebase",
-              "notion"
+              "notion",
+              "snowflake"
             ]
           },
           { status: 400 }
