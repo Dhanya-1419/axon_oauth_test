@@ -1152,7 +1152,7 @@ export default function App() {
                         </select>
                       </div>
 
-                      {(!useEnv || activeAuthTab === "custom") && selected.fields?.[activeAuthTab]?.map(f => (
+                      {(!useEnv || activeAuthTab !== "oauth") && selected.fields?.[activeAuthTab]?.map(f => (
                         <div className="form-row" key={f.key}>
                           <div className="form-label">{f.label}</div>
                           <input
