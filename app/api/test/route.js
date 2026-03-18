@@ -293,7 +293,7 @@ export async function POST(req) {
         }
 
         const base = String(picked.baseUrl).replace(/\/+$/, "");
-        const url = `${base}/documents`;
+        const url = `${base}/signature_requests`;
 
         const r = await fetchJson(url, {
           headers: {
