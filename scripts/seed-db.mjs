@@ -142,13 +142,17 @@ const providers = [
   {
     provider: "hubspot",
     clientId:     env["HUBSPOT_CLIENT_ID"],
-    clientSecret: null, // not in env
+    clientSecret: env["HUBSPOT_CLIENT_SECRET"] || env["HUBSPOT_SECRET"],
+  },
+  {
+    provider: "calendly",
+    clientId:     env["CALENDLY_CLIENT_ID"],
+    clientSecret: env["CALENDLY_CLIENT_SECRET"],
   },
   {
     provider: "airtable",
-    // Airtable uses a Personal Access Token, not OAuth secret flow
-    clientId:     env["AIRTABLE_API_KEY"],
-    clientSecret: null,
+    clientId:     env["AIRTABLE_CLIENT_ID"] || env["AIRTABLE_API_KEY"],
+    clientSecret: env["AIRTABLE_CLIENT_SECRET"],
   },
   {
     provider: "mailchimp",
