@@ -1,25 +1,23 @@
 import { NextResponse } from "next/server";
+import { getOAuthConfig } from "../../utils";
 
 export const runtime = "nodejs";
 
-export async function GET() {
-  const clientId = process.env.LINEAR_CLIENT_ID;
-  const redirectUri = `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/oauth/callback/linear`;
+export async function GET(req) {
+  const searchParams = new URL(req.url).searchParams;
+  const { clientId, redirectUri, scopes } = await getOAuthConfig("linear", searchParams, req);
 
   if (!clientId) {
     return NextResponse.json({ error: "Linear client ID not configured" }, { status: 500 });
   }
 
-  // Generate a random state for security
-  const state = Math.random().toString(36).substring(2, 15);
+  const authUrl = new URL("https://linear.app/oauth/authorize");
+  authUrl.searchParams.set("client_id", clientId);
+  authUrl.searchParams.set("redirect_uri", redirectUri);
+  authUrl.searchParams.set("response_type", "code");
+  authUrl.searchParams.set("scope", scopes || "read,write");
+  authUrl.searchParams.set("state", Math.random().toString(36).substring(7));
+  authUrl.searchParams.set("actor", "application");
 
-  const linearAuthUrl = new URL("https://linear.app/oauth/authorize");
-  linearAuthUrl.searchParams.append("client_id", clientId);
-  linearAuthUrl.searchParams.append("redirect_uri", redirectUri);
-  linearAuthUrl.searchParams.append("response_type", "code");
-  linearAuthUrl.searchParams.append("scope", "read,write");
-  linearAuthUrl.searchParams.append("state", state);
-  linearAuthUrl.searchParams.append("actor", "application");
-
-  return NextResponse.redirect(linearAuthUrl.toString());
+  return NextResponse.redirect(authUrl.toString());
 }

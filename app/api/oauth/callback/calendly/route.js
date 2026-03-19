@@ -37,6 +37,14 @@ export async function GET(req) {
     // and DO NOT include client_id in the body when using Basic Auth
     const basicAuth = Buffer.from(`${clientId}:${clientSecret}`).toString("base64");
     
+    // Log for debugging
+    console.log("Calendly Token Exchange Params:", {
+      clientId,
+      redirectUri,
+      code: code.slice(0, 5) + "...",
+      hasCodeVerifier: !!codeVerifier
+    });
+
     const tokenResponse = await fetch("https://auth.calendly.com/oauth/token", {
       method: "POST",
       headers: {
@@ -53,6 +61,7 @@ export async function GET(req) {
 
     if (!tokenResponse.ok) {
       const errorData = await tokenResponse.text();
+      console.error("Calendly Token Response Error:", errorData);
       throw new Error(`Token exchange failed: ${errorData}`);
     }
 
@@ -76,7 +85,8 @@ export async function GET(req) {
     return res;
 
   } catch (error) {
-    await logActivity("calendly", "ERROR", error.message || "Unknown error");
+    const errorMsg = `Token exchange failed: ${error.message}${redirectUri ? ` (uri: ${redirectUri})` : ""}`;
+    await logActivity("calendly", "ERROR", errorMsg);
     console.error("Calendly OAuth callback error:", error);
     return NextResponse.redirect(
       `${getBaseUrl(req)}?error=calendly_oauth_failed`
