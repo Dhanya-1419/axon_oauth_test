@@ -35,6 +35,7 @@ export async function GET(req) {
     
     // Retrieve and clear code_verifier for PKCE
     const codeVerifier = req.cookies.get("airtable_code_verifier")?.value;
+    console.log("Airtable Callback: codeVerifier =", codeVerifier);
     if (!codeVerifier) {
       throw new Error("Missing PKCE code_verifier cookie. Check if cookies are enabled and try again.");
     }

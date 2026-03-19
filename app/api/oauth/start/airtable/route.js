@@ -13,18 +13,17 @@ export async function GET(req) {
 
   // Airtable REQUIRES PKCE
   const { verifier, challenge } = generatePKCE();
-
+  console.log("Airtable Start: verifier =", verifier, "challenge =", challenge);
+  
   const authUrl = new URL("https://airtable.com/oauth2/v1/authorize");
   authUrl.searchParams.set("client_id", clientId);
   authUrl.searchParams.set("redirect_uri", redirectUri);
   authUrl.searchParams.set("response_type", "code");
-  authUrl.searchParams.set("scope", scopes || "data.records:read data.records:write");
+  authUrl.searchParams.set("scope", scopes || "data.records:read data.records:write schema.bases:read");
   authUrl.searchParams.set("code_challenge", challenge);
   authUrl.searchParams.set("code_challenge_method", "S256");
-
-  authUrl.searchParams.set("access_type", "offline");
-  authUrl.searchParams.set("prompt", "consent");
   authUrl.searchParams.set("state", Math.random().toString(36).substring(7));
+  authUrl.searchParams.set("prompt", "consent");
 
   const response = NextResponse.redirect(authUrl.toString());
 
