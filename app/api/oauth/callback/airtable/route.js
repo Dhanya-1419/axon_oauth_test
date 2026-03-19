@@ -34,6 +34,8 @@ export async function GET(req) {
     const basicAuth = encodeBasicAuth(clientId, clientSecret);
     
     // Retrieve and clear code_verifier for PKCE
+    const allCookies = req.cookies.getAll().map(c => `${c.name}=${c.value}`).join("; ");
+    console.log("Airtable Callback: allCookies =", allCookies);
     const codeVerifier = req.cookies.get("airtable_code_verifier")?.value;
     console.log("Airtable Callback: codeVerifier =", codeVerifier);
     if (!codeVerifier) {
