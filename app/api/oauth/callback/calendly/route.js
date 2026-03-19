@@ -33,8 +33,9 @@ export async function GET(req) {
     }
 
     // Exchange authorization code for access token
-    // Standard Basic Auth: encode components first per RFC 6749
-    const basicAuth = Buffer.from(`${encodeURIComponent(clientId)}:${encodeURIComponent(clientSecret)}`).toString("base64");
+    // Calendly: DO NOT URL-encode components for Basic Auth
+    // and DO NOT include client_id in the body when using Basic Auth
+    const basicAuth = Buffer.from(`${clientId}:${clientSecret}`).toString("base64");
     
     const tokenResponse = await fetch("https://auth.calendly.com/oauth/token", {
       method: "POST",
@@ -45,7 +46,6 @@ export async function GET(req) {
       body: new URLSearchParams({
         grant_type: "authorization_code",
         code: code,
-        client_id: clientId, // Some servers like it in both places
         redirect_uri: redirectUri,
         code_verifier: codeVerifier || "",
       }),

@@ -26,14 +26,19 @@ export async function GET(req) {
   }
 
   try {
+    // HubSpot supports both Basic Auth and POST body. 
+    // Basic Auth is often more robust against encoding issues.
+    const basicAuth = Buffer.from(`${clientId}:${clientSecret}`).toString("base64");
+
     const tokenRes = await fetch("https://api.hubapi.com/oauth/v1/token", {
       method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      headers: { 
+        "Content-Type": "application/x-www-form-urlencoded",
+        "Authorization": `Basic ${basicAuth}`
+      },
       body: new URLSearchParams({
         grant_type: "authorization_code",
         code,
-        client_id: clientId,
-        client_secret: clientSecret,
         redirect_uri: redirectUri,
       }),
     });

@@ -58,3 +58,13 @@ export function generatePKCE() {
   const challenge = crypto.createHash('sha256').update(verifier).digest('base64url');
   return { verifier, challenge };
 }
+/**
+ * Encodes credentials for Basic Auth.
+ * Per RFC 6749 Section 2.3.1, components MUST be URL-encoded before being
+ * joined by a colon and then base64 encoded.
+ */
+export function encodeBasicAuth(clientId, clientSecret) {
+  return Buffer.from(
+    `${encodeURIComponent(clientId)}:${encodeURIComponent(clientSecret)}`
+  ).toString("base64");
+}

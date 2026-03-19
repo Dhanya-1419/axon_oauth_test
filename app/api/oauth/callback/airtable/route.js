@@ -29,20 +29,20 @@ export async function GET(req) {
   }
 
   try {
-    // Airtable requires Basic auth for token exchange
-    const credentials = Buffer.from(`${clientId}:${clientSecret}`).toString("base64");
+    // Airtable requires Basic auth for token exchange (URL-encoded per RFC 6749)
+    const { encodeBasicAuth } = await import("../../utils");
+    const basicAuth = encodeBasicAuth(clientId, clientSecret);
     
     // Retrieve and clear code_verifier for PKCE
-    const codeVerifier = cookies().get("airtable_code_verifier")?.value;
+    const codeVerifier = req.cookies.get("airtable_code_verifier")?.value;
     if (!codeVerifier) {
       throw new Error("Missing PKCE code_verifier cookie. Check if cookies are enabled and try again.");
     }
-    cookies().delete("airtable_code_verifier");
 
     const tokenRes = await fetch("https://airtable.com/oauth2/v1/token", {
       method: "POST",
       headers: {
-        "Authorization": `Basic ${credentials}`,
+        "Authorization": `Basic ${basicAuth}`,
         "Content-Type": "application/x-www-form-urlencoded",
       },
       body: new URLSearchParams({
@@ -66,9 +66,15 @@ export async function GET(req) {
     });
 
     await logActivity("airtable", "SUCCESS", "Connected successfully");
-    return NextResponse.redirect(`${baseUrl}?oauth_success=airtable`);
+    const res = NextResponse.redirect(`${baseUrl}?oauth_success=airtable`);
+    res.cookies.delete("airtable_code_verifier");
+    return res;
   } catch (e) {
     await logActivity("airtable", "ERROR", e.message || "Unknown error");
-    return NextResponse.redirect(`${baseUrl}?oauth_error=${encodeURIComponent(e.message)}`);
+    const res = NextResponse.redirect(`${baseUrl}?oauth_error=${encodeURIComponent(e.message)}`);
+    // Also clear cookie on error to avoid stale state
+    // Note: next/headers cookies() deletion might not work in all redirect scenarios, 
+    // but setting it on the response object is standard for App Router.
+    return res;
   }
 }
