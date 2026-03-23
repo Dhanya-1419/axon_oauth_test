@@ -40,6 +40,10 @@ export async function getOAuthConfig(provider, searchParams, baseUrlOrReq = null
   clientSecret = clientSecret || process.env[`${envPrefix}_SECRET`]        || process.env[`${envPrefix}_CLIENT_SECRET`];
   scopes       = scopes       || process.env[`${envPrefix}_SCOPES`]        || null;
 
+  if (clientId === "undefined" || clientId === "null") clientId = null;
+  if (clientSecret === "undefined" || clientSecret === "null") clientSecret = null;
+  if (scopes === "undefined" || scopes === "null") scopes = null;
+
   // 4. Dynamic Redirect URI (Env based with dynamic host fallback)
   const baseUrl = (typeof baseUrlOrReq === 'string') 
     ? baseUrlOrReq 
