@@ -15,11 +15,16 @@ export async function GET(req) {
   authUrl.searchParams.set("client_id", clientId);
   authUrl.searchParams.set("redirect_uri", redirectUri);
   authUrl.searchParams.set("response_type", "code");
-  if (scopes) authUrl.searchParams.set("scope", scopes || "com.intuit.quickbooks.accounting");
+  
+  // QuickBooks often requires openid for OIDC flows to work correctly with some apps
+  const defaultScopes = "com.intuit.quickbooks.accounting openid profile email";
+  authUrl.searchParams.set("scope", scopes || defaultScopes);
 
   authUrl.searchParams.set("access_type", "offline");
   authUrl.searchParams.set("prompt", "consent");
   authUrl.searchParams.set("state", Math.random().toString(36).substring(7));
+
+  console.log(`[QuickBooks] Redirecting to: ${authUrl.toString()}`);
 
   return NextResponse.redirect(authUrl.toString());
 }

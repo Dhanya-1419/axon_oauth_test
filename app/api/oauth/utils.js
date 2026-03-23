@@ -26,11 +26,12 @@ export async function getOAuthConfig(provider, searchParams, baseUrlOrReq = null
   let scopes       = searchParams?.get("scopes")       || null;
 
   // 2. Load from DB (persisted credentials)
-  if (!clientId || !clientSecret) {
+  if (!clientId || !clientSecret || !scopes) {
     const stored = await getStoredConfig(provider);
     if (stored) {
       clientId     = clientId     || stored.clientId;
       clientSecret = clientSecret || stored.clientSecret;
+      scopes       = scopes       || stored.scopes;
     }
   }
 
@@ -40,9 +41,17 @@ export async function getOAuthConfig(provider, searchParams, baseUrlOrReq = null
   clientSecret = clientSecret || process.env[`${envPrefix}_SECRET`]        || process.env[`${envPrefix}_CLIENT_SECRET`];
   scopes       = scopes       || process.env[`${envPrefix}_SCOPES`]        || null;
 
-  if (clientId === "undefined" || clientId === "null") clientId = null;
-  if (clientSecret === "undefined" || clientSecret === "null") clientSecret = null;
-  if (scopes === "undefined" || scopes === "null") scopes = null;
+  // 3.5 Sanitize literal string "undefined"/"null" or empty strings
+  const sanitize = (val) => {
+    if (typeof val !== 'string') return val;
+    const trimmed = val.trim();
+    if (trimmed === "undefined" || trimmed === "null" || trimmed === "") return null;
+    return trimmed;
+  };
+
+  clientId     = sanitize(clientId);
+  clientSecret = sanitize(clientSecret);
+  scopes       = sanitize(scopes);
 
   // 4. Dynamic Redirect URI (Env based with dynamic host fallback)
   const baseUrl = (typeof baseUrlOrReq === 'string') 

@@ -18,10 +18,11 @@ export async function initDb() {
   `;
   await sql`
     CREATE TABLE IF NOT EXISTS oauth_configs (
-      provider   TEXT PRIMARY KEY,
-      client_id  TEXT,
+      provider      TEXT PRIMARY KEY,
+      client_id     TEXT,
       client_secret TEXT,
-      updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      scopes        TEXT,
+      updated_at    TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
     );
   `;
   await sql`
@@ -77,15 +78,16 @@ export async function deleteStoredToken(provider) {
 
 /* ─────────────────────── CONFIGS (client creds) ─────────────────────── */
 
-export async function upsertConfig(provider, { clientId, clientSecret }) {
+export async function upsertConfig(provider, { clientId, clientSecret, scopes }) {
   await initDb();
   await sql`
-    INSERT INTO oauth_configs (provider, client_id, client_secret, updated_at)
-    VALUES (${provider}, ${clientId ?? null}, ${clientSecret ?? null}, CURRENT_TIMESTAMP)
+    INSERT INTO oauth_configs (provider, client_id, client_secret, scopes, updated_at)
+    VALUES (${provider}, ${clientId ?? null}, ${clientSecret ?? null}, ${scopes ?? null}, CURRENT_TIMESTAMP)
     ON CONFLICT (provider)
     DO UPDATE SET
       client_id     = COALESCE(EXCLUDED.client_id,     oauth_configs.client_id),
       client_secret = COALESCE(EXCLUDED.client_secret, oauth_configs.client_secret),
+      scopes        = COALESCE(EXCLUDED.scopes,        oauth_configs.scopes),
       updated_at    = CURRENT_TIMESTAMP;
   `;
 }
@@ -96,13 +98,14 @@ export async function upsertConfig(provider, { clientId, clientSecret }) {
 export async function getStoredConfig(provider) {
   await initDb();
   const result = await sql`
-    SELECT client_id, client_secret
+    SELECT client_id, client_secret, scopes
     FROM oauth_configs WHERE provider = ${provider};
   `;
   if (result.length === 0) return null;
   return {
     clientId:     result[0].client_id,
     clientSecret: result[0].client_secret,
+    scopes:       result[0].scopes,
   };
 }
 
